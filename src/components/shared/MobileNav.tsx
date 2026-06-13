@@ -57,7 +57,7 @@ export function MobileNav() {
         <Separator />
         <nav className="space-y-1 px-3 py-4">
           {dashboardNavItems.filter((item) => {
-            if (item.href === "" || item.href === "/profile" || item.href === "/modules") return true;
+            if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules") return true;
             const moduleKey = item.href.replace("/", "");
             return activeBusiness?.activeModules.includes(moduleKey as any);
           }).map((item) => {
