@@ -1,3 +1,5 @@
+import "server-only";
+
 import { createClient } from "@supabase/supabase-js";
 
 export function getSupabaseAdmin() {
@@ -14,10 +16,4 @@ export function getSupabaseAdmin() {
       persistSession: false,
     },
   });
-}
-
-export function getDemoOrganizationId() {
-  return (
-    process.env.DEMO_ORG_ID ?? "00000000-0000-0000-0000-000000000001"
-  );
 }

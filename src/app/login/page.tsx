@@ -18,7 +18,7 @@ export default function LoginPage() {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
           <Wallet className="h-4 w-4 text-primary-foreground" />
         </div>
-        <span>FinFlow</span>
+        <span>Pulso AI</span>
       </Link>
       
       <Card className="w-full max-w-sm">

@@ -83,7 +83,7 @@ export function UploadTicket({ onUpload }: UploadTicketProps) {
   );
 
   const handleUpload = async () => {
-    if (files.length === 0 || !onUpload) return;
+    if (files.length === 0) return;
 
     setIsUploading(true);
     setFiles((prev) =>
@@ -91,7 +91,22 @@ export function UploadTicket({ onUpload }: UploadTicketProps) {
     );
 
     try {
-      await onUpload(files.map((f) => f.file));
+      if (onUpload) {
+        await onUpload(files.map((f) => f.file));
+      } else {
+        for (const item of files) {
+          const body = new FormData();
+          body.append("file", item.file);
+          const response = await fetch(
+            "/api/integrations/n8n/document-analysis",
+            { method: "POST", body },
+          );
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error ?? "No se pudo procesar el documento.");
+          }
+        }
+      }
       setFiles((prev) =>
         prev.map((f) => ({ ...f, status: "success" as const }))
       );
