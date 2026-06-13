@@ -14,12 +14,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "FinFlow — Gestión Financiera Inteligente",
-    template: "%s | FinFlow",
+    default: "Pulso AI - Gestion para microempresas",
+    template: "%s | Pulso AI",
   },
   description:
-    "Plataforma SaaS para la gestión inteligente de gastos, facturas y flujo de caja empresarial. Automatiza tu contabilidad con IA.",
-  keywords: ["finanzas", "gastos", "facturas", "contabilidad", "SaaS", "IA"],
+    "Organizacion financiera, operativa y fiscal accesible para microempresas mexicanas.",
+  keywords: ["microempresas", "finanzas", "facturas", "SAT", "Mexico", "IA"],
 };
 
 export default function RootLayout({
@@ -32,7 +32,7 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

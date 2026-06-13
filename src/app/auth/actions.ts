@@ -1,113 +1,118 @@
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-// Helper function to translate Supabase errors to Spanish
-function translateAuthError(error: Error | any): string {
-  const msg = error?.message || '';
-  
-  if (msg.includes('Invalid login credentials')) {
-    return 'Correo o contraseña incorrectos. Verifica tus datos e intenta de nuevo.';
+export type AuthState = {
+  error?: string;
+};
+
+function errorMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
   }
-  if (msg.includes('Email not confirmed')) {
-    return 'Debes confirmar tu correo electrónico antes de iniciar sesión.';
+  return "";
+}
+
+function translateAuthError(error: unknown) {
+  const message = errorMessage(error);
+
+  if (message.includes("Invalid login credentials")) {
+    return "Correo o contrasena incorrectos.";
   }
-  if (msg.includes('User already registered')) {
-    return 'Este correo ya está registrado. Intenta iniciar sesión.';
+  if (message.includes("Email not confirmed")) {
+    return "Confirma tu correo antes de iniciar sesion.";
   }
-  if (msg.includes('Password should be at least 6 characters')) {
-    return 'La contraseña debe tener al menos 6 caracteres.';
+  if (message.includes("User already registered")) {
+    return "Este correo ya esta registrado.";
   }
-  if (msg.includes('invalid email format')) {
-    return 'El formato del correo electrónico no es válido.';
+  if (message.includes("Password should be at least")) {
+    return "La contrasena debe tener al menos 8 caracteres.";
   }
-  if (msg.toLowerCase().includes('rate limit')) {
-    return 'Has superado el límite de intentos. Por favor espera unos minutos antes de volver a intentar.';
+  if (message.toLowerCase().includes("rate limit")) {
+    return "Superaste el limite de intentos. Espera unos minutos.";
   }
-  
-  // Default fallback
-  return 'Ocurrió un error. Por favor intenta nuevamente. (' + msg + ')';
+  return "No se pudo completar la operacion. Intenta nuevamente.";
 }
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-export async function login(prevState: any, formData: FormData) {
-  const supabase = await createClient()
+export async function login(
+  _previousState: AuthState | undefined,
+  formData: FormData,
+): Promise<AuthState | undefined> {
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
 
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-
-  if (!email || !password) {
-    return { error: 'El correo y la contraseña son requeridos.' }
+  if (!isValidEmail(email) || !password) {
+    return { error: "Ingresa un correo y contrasena validos." };
   }
 
-  if (!isValidEmail(email)) {
-    return { error: 'Por favor, ingresa un correo electrónico con un formato válido.' }
-  }
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return { error: translateAuthError(error) };
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
-  if (error) {
-    return { error: translateAuthError(error) }
-  }
-
-  revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
 }
 
-export async function signup(prevState: any, formData: FormData) {
-  const supabase = await createClient()
+export async function signup(
+  _previousState: AuthState | undefined,
+  formData: FormData,
+): Promise<AuthState | undefined> {
+  const businessName = String(formData.get("businessName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
 
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-
-  if (!email || !password) {
-    return { error: 'El correo y la contraseña son requeridos.' }
+  if (!businessName) {
+    return { error: "Escribe el nombre de tu negocio." };
   }
-
   if (!isValidEmail(email)) {
-    return { error: 'Por favor, ingresa un correo electrónico con un formato válido.' }
+    return { error: "Ingresa un correo valido." };
+  }
+  if (password.length < 8) {
+    return { error: "La contrasena debe tener al menos 8 caracteres." };
   }
 
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-  })
+    options: { data: { business_name: businessName } },
+  });
 
   if (error) {
-    return { error: translateAuthError(error) }
+    return { error: translateAuthError(error) };
   }
 
-  // Creación de Multi-Tenant: Si el usuario se creó correctamente, creamos su organización base.
-  if (data?.user) {
-    const { data: orgData, error: orgError } = await supabase
-      .from('organizations')
-      .insert({ name: 'Mi Organización' })
-      .select('id')
-      .single()
+  if (data.user) {
+    const { data: organization, error: organizationError } = await supabase
+      .from("organizations")
+      .insert({ name: businessName })
+      .select("id")
+      .single();
 
-    if (orgData && !orgError) {
-      await supabase
-        .from('organization_members')
-        .insert({
-          organization_id: orgData.id,
-          user_id: data.user.id,
-          role: 'owner'
-        })
+    if (organization && !organizationError) {
+      await supabase.from("organization_members").insert({
+        organization_id: organization.id,
+        user_id: data.user.id,
+        role: "owner",
+      });
     } else {
-      console.error("Error creating organization:", orgError)
+      console.error("Error creating organization:", organizationError);
     }
   }
 
-  revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
 }
 
 export async function logout() {
