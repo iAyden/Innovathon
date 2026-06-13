@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MobileNav } from "./MobileNav";
+import { logout } from "@/app/auth/actions";
 
 export function Topbar() {
   return (
@@ -68,7 +69,9 @@ export function Topbar() {
             <DropdownMenuItem>Perfil</DropdownMenuItem>
             <DropdownMenuItem>Configuración</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Cerrar Sesión</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onClick={() => logout()}>
+              Cerrar Sesión
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
