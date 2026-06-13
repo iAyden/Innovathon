@@ -1,130 +1,153 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
-@custom-variant dark (&:is(.dark *));
+@import "@fontsource-variable/fraunces/index.css";
+@import "@fontsource-variable/inter/index.css";
+@import "@fontsource/ibm-plex-mono/index.css";
 
 @theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Fraunces Variable", ui-serif, Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
+
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 8px);
 }
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
+/*
+  Capataz — tema oscuro
+  Verde-negro de fondo, acentos verde (WhatsApp/activo) y ámbar (sello/COFEPRIS).
+  Fraunces para encabezados, Inter para cuerpo, IBM Plex Mono para datos/timestamps.
+*/
+:root,
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #284033ee;
+  --foreground: #EFEEE6;
+
+  --card: #18221C;
+  --card-foreground: #EFEEE6;
+
+  --popover: #1F2B24;
+  --popover-foreground: #EFEEE6;
+
+  /* Primary = ámbar "sello", para acciones principales */
+  --primary: #ffffff;
+  --primary-foreground: #1A1306;
+
+  /* Secondary = superficie elevada, texto claro */
+  --secondary: #1F2B24;
+  --secondary-foreground: #EFEEE6;
+
+  --muted: #1F2B24;
+  --muted-foreground: #8FA398;
+
+  /* Accent = verde "activo/en vivo" */
+  --accent: #1E5C3A;
+  --accent-foreground: #DDF6E6;
+
+  --destructive: #E2A37C;
+  --destructive-foreground: #1A1306;
+
+  --border: #2B3A32;
+  --input: #2B3A32;
+  --ring: #E8C27E;
+
+  --radius: 14px;
+}
+
+/* Capataz nunca cambia a modo claro: ambas clases apuntan al tema oscuro */
+.light {
+  --background: #0F1612;
+  --foreground: #EFEEE6;
+  --card: #18221C;
+  --card-foreground: #EFEEE6;
+  --popover: #1F2B24;
+  --popover-foreground: #EFEEE6;
+  --primary: #E8C27E;
+  --primary-foreground: #1A1306;
+  --secondary: #1F2B24;
+  --secondary-foreground: #EFEEE6;
+  --muted: #1F2B24;
+  --muted-foreground: #8FA398;
+  --accent: #1E5C3A;
+  --accent-foreground: #DDF6E6;
+  --destructive: #E2A37C;
+  --destructive-foreground: #1A1306;
+  --border: #2B3A32;
+  --input: #2B3A32;
+  --ring: #E8C27E;
+  --radius: 14px;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
-  html {
-    @apply font-sans;
+  .font-heading {
+    font-family: var(--font-heading);
+    font-weight: 600;
+  }
+}
+
+/*
+  Estado "en vivo" — para usar junto al Badge en agentes activos:
+  <Badge className="status-live">activo</Badge>
+*/
+@layer utilities {
+  .status-live {
+    position: relative;
+  }
+  .status-live::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 2px;
+    border-radius: 50%;
+    background: #2BD66B;
+    box-shadow: 0 0 0 0 rgba(43, 214, 107, 0.6);
+    animation: capataz-pulse 2s infinite;
+  }
+  @keyframes capataz-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(43, 214, 107, 0.55); }
+    70% { box-shadow: 0 0 0 6px rgba(43, 214, 107, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(43, 214, 107, 0); }
+  }
+
+  /* Variante "coral" para destacar inteligencia/IA, alternativa a destructive */
+  .badge-coral {
+    background-color: #4A2E1E;
+    color: #E2A37C;
   }
 }
