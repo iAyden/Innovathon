@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import {
   Activity,
   Blocks,
@@ -12,6 +12,7 @@ import {
   Sparkles,
   WalletCards,
   Workflow,
+  ChevronDown,
 } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 import { Separator } from "@/components/ui/separator";
@@ -24,37 +25,56 @@ type NavItem = {
   icon: LucideIcon;
 };
 
+// Rutas relativas, el orgId se antepondrá dinámicamente
 export const dashboardNavItems: NavItem[] = [
-  { title: "Inicio", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Perfil", href: "/dashboard/profile", icon: Building2 },
-  { title: "Modulos", href: "/dashboard/modules", icon: Blocks },
-  { title: "Flujo de caja", href: "/dashboard/cash-flow", icon: Activity },
-  { title: "Facturas", href: "/dashboard/invoices", icon: FileText },
-  { title: "Integraciones", href: "/dashboard/integrations", icon: Workflow },
+  { title: "Inicio", href: "", icon: LayoutDashboard },
+  { title: "Perfil", href: "/profile", icon: Building2 },
+  { title: "Modulos", href: "/modules", icon: Blocks },
+  { title: "Flujo de caja", href: "/cash-flow", icon: Activity },
+  { title: "Facturas", href: "/invoices", icon: FileText },
+  { title: "Integraciones", href: "/integrations", icon: Workflow },
 ];
+
+import { useBusiness } from "@/contexts/BusinessContext";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const params = useParams();
+  const orgId = params.orgId as string;
+  const { activeBusiness } = useBusiness();
 
   return (
     <aside className="hidden h-full w-64 flex-col border-r border-border bg-card lg:flex">
-      <div className="flex items-center gap-2.5 px-6 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <WalletCards className="h-4 w-4 text-primary-foreground" />
+      <div className="flex flex-col px-4 py-4 gap-4">
+        {/* Workspace Switcher MOCK */}
+        <div className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
+              <Building2 className="h-3 w-3 text-primary-foreground" />
+            </div>
+            <span className="text-sm font-semibold truncate max-w-[120px]">{activeBusiness?.name || "Cargando..."}</span>
+          </div>
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </div>
-        <span className="text-lg font-semibold tracking-tight">Pulso AI</span>
       </div>
       <Separator />
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {dashboardNavItems.map((item) => {
+        {dashboardNavItems.filter((item) => {
+          // Si el item es 'Inicio' o 'Perfil', siempre se muestra.
+          if (item.href === "" || item.href === "/profile" || item.href === "/modules") return true;
+          // Si no, verificamos que el módulo esté activo para este negocio
+          const moduleKey = item.href.replace("/", "");
+          return activeBusiness?.activeModules.includes(moduleKey as any);
+        }).map((item) => {
+          const fullHref = `/dashboard/${orgId}${item.href}`;
           const active =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
+            item.href === ""
+              ? pathname === `/dashboard/${orgId}`
+              : pathname.startsWith(fullHref);
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={fullHref}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 active
