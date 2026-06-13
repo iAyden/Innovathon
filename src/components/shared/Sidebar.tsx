@@ -13,6 +13,7 @@ import {
   WalletCards,
   Workflow,
   ChevronDown,
+  Palette,
 } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 import { Separator } from "@/components/ui/separator";
@@ -29,6 +30,7 @@ type NavItem = {
 export const dashboardNavItems: NavItem[] = [
   { title: "Inicio", href: "", icon: LayoutDashboard },
   { title: "Perfil", href: "/profile", icon: Building2 },
+  { title: "Personalizar", href: "/theme", icon: Palette },
   { title: "Modulos", href: "/modules", icon: Blocks },
   { title: "Flujo de caja", href: "/cash-flow", icon: Activity },
   { title: "Facturas", href: "/invoices", icon: FileText },
@@ -60,8 +62,8 @@ export function Sidebar() {
       <Separator />
       <nav className="flex-1 space-y-1 px-3 py-4">
         {dashboardNavItems.filter((item) => {
-          // Si el item es 'Inicio' o 'Perfil', siempre se muestra.
-          if (item.href === "" || item.href === "/profile" || item.href === "/modules") return true;
+          // Si el item es 'Inicio', 'Perfil', 'Personalizar' o 'Modulos', siempre se muestra.
+          if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules") return true;
           // Si no, verificamos que el módulo esté activo para este negocio
           const moduleKey = item.href.replace("/", "");
           return activeBusiness?.activeModules.includes(moduleKey as any);
