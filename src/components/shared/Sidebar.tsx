@@ -8,10 +8,12 @@ import {
   Building2,
   FileText,
   LayoutDashboard,
+  LogOut,
   Sparkles,
   WalletCards,
   Workflow,
 } from "lucide-react";
+import { logout } from "@/app/auth/actions";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -80,6 +82,15 @@ export function Sidebar() {
             Completa tu perfil para mejorar modulos y recomendaciones.
           </p>
         </Link>
+        <form action={logout} className="mt-4">
+          <button
+            type="submit"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+          >
+            <LogOut className="h-4 w-4" />
+            Cerrar sesion
+          </button>
+        </form>
       </div>
     </aside>
   );

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, WalletCards } from "lucide-react";
+import { LogOut, Menu, WalletCards } from "lucide-react";
+import { logout } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -62,6 +63,17 @@ export function MobileNav() {
             );
           })}
         </nav>
+        <div className="absolute bottom-6 left-0 w-full px-6">
+          <form action={logout}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <LogOut className="h-4 w-4" />
+              Cerrar sesion
+            </button>
+          </form>
+        </div>
       </SheetContent>
     </Sheet>
   );

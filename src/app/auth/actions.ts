@@ -83,12 +83,33 @@ export async function signup(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { business_name: businessName } },
   });
-  if (error) return { error: translateAuthError(error) };
+
+  if (error) {
+    return { error: translateAuthError(error) };
+  }
+
+  if (data.user) {
+    const { data: organization, error: organizationError } = await supabase
+      .from("organizations")
+      .insert({ name: businessName })
+      .select("id")
+      .single();
+
+    if (organization && !organizationError) {
+      await supabase.from("organization_members").insert({
+        organization_id: organization.id,
+        user_id: data.user.id,
+        role: "owner",
+      });
+    } else {
+      console.error("Error creating organization:", organizationError);
+    }
+  }
 
   revalidatePath("/", "layout");
   redirect("/dashboard");
