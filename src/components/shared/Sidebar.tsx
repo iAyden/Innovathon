@@ -9,10 +9,12 @@ import {
   Settings,
   Wallet,
   Sparkles,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import type { LucideIcon } from "lucide-react";
+import { logout } from "@/app/auth/actions";
 
 interface NavItem {
   title: string;
@@ -83,6 +85,13 @@ export function Sidebar() {
             Actualizar Plan
           </button>
         </div>
+        
+        <form action={logout} className="mt-4">
+          <button type="submit" className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors">
+            <LogOut className="w-4 h-4" />
+            Cerrar Sesión
+          </button>
+        </form>
       </div>
     </aside>
   );
