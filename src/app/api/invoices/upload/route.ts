@@ -1,75 +1,92 @@
 import { NextResponse } from "next/server";
-import { validateInvoiceAgainstExpense } from "@/lib/cfdi";
+import { parseCfdiXml, validateCfdi } from "@/lib/cfdi";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
+const DEMO_ORG_ID =
+  process.env.DEMO_ORG_ID ?? "00000000-0000-0000-0000-000000000001";
+
 export async function POST(request: Request) {
-  const formData = await request.formData();
-  const file = formData.get("file");
-  const expenseId = formData.get("expenseId")?.toString();
-  const businessRfc = formData.get("businessRfc")?.toString() ?? "CSO920101XXX";
+  try {
+    const body = await request.json();
 
-  if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Archivo requerido." }, { status: 400 });
-  }
+    const expenseId = String(body.expenseId ?? "");
+    const xmlContent = String(body.xmlContent ?? "");
 
-  const xml = await file.text();
-  const supabase = getSupabaseAdmin();
+    if (!expenseId) {
+      return NextResponse.json(
+        { error: "El expenseId es obligatorio." },
+        { status: 400 }
+      );
+    }
 
-  let expense: { id: string; organization_id: string; amount: number | string | null } | null = null;
-  let taxRfc = businessRfc;
+    if (!xmlContent) {
+      return NextResponse.json(
+        { error: "El contenido XML es obligatorio." },
+        { status: 400 }
+      );
+    }
 
-  if (supabase && expenseId) {
-    const { data } = await supabase
-      .from("expenses")
-      .select("id, organization_id, amount")
-      .eq("id", expenseId)
-      .maybeSingle();
-    expense = data;
+    const parsedInvoice = parseCfdiXml(xmlContent);
+    const supabase = getSupabaseAdmin();
 
-    if (expense) {
+    let expectedTotal: number | null = null;
+    let expectedReceiverRfc: string | null = null;
+
+    if (supabase) {
+      const { data: expense, error: expenseError } = await supabase
+        .from("expenses")
+        .select("id, organization_id, amount")
+        .eq("id", expenseId)
+        .single();
+
+      if (expenseError || !expense) {
+        return NextResponse.json(
+          {
+            error: "No encontramos el egreso relacionado.",
+            details: expenseError?.message,
+          },
+          { status: 404 }
+        );
+      }
+
+      expectedTotal = Number(expense.amount);
+
       const { data: taxProfile } = await supabase
         .from("tax_profiles")
         .select("rfc")
         .eq("organization_id", expense.organization_id)
         .maybeSingle();
-      taxRfc = taxProfile?.rfc ?? taxRfc;
+
+      expectedReceiverRfc = taxProfile?.rfc ?? null;
+    } else {
+      expectedTotal = parsedInvoice.total;
+      expectedReceiverRfc = "CSO920101XXX";
     }
-  }
 
-  const result = validateInvoiceAgainstExpense({
-    xml,
-    businessRfc: taxRfc,
-    expenseAmount: expense?.amount ? Number(expense.amount) : null,
-  });
-
-  if (supabase && expense) {
-    await supabase.from("invoice_files").insert({
-      organization_id: expense.organization_id,
-      expense_id: expense.id,
-      file_name: file.name,
-      uuid: result.invoice.uuid,
-      issuer_rfc: result.invoice.issuerRfc,
-      receiver_rfc: result.invoice.receiverRfc,
-      subtotal: result.invoice.subtotal,
-      iva: result.invoice.iva,
-      total: result.invoice.total,
-      validation_status: result.valid ? "validated" : "needs_correction",
-      validation_errors: result.errors,
-      raw_xml: xml,
+    const validation = validateCfdi({
+      parsed: parsedInvoice,
+      expectedReceiverRfc,
+      expectedTotal,
     });
 
-    await supabase
-      .from("expenses")
-      .update({ status: result.valid ? "validated" : "needs_correction" })
-      .eq("id", expense.id);
-  }
+    return NextResponse.json({
+      valid: validation.valid,
+      status: validation.status,
+      invoice: parsedInvoice,
+      errors: validation.errors,
+      humanMessage: validation.humanMessage,
+      mode: supabase ? "supabase" : "demo",
+      demoOrgId: DEMO_ORG_ID,
+    });
+  } catch (error) {
+    console.error("Invoice validate error:", error);
 
-  return NextResponse.json({
-    fileName: file.name,
-    valid: result.valid,
-    status: result.valid ? "validated" : "needs_correction",
-    invoice: result.invoice,
-    errors: result.errors,
-    humanMessage: result.humanMessage,
-  });
+    return NextResponse.json(
+      {
+        error: "No se pudo validar el XML.",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
 }

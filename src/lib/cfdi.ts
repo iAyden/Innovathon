@@ -1,102 +1,160 @@
-import type { XmlInvoiceData } from "@/types";
+export type ParsedCfdi = {
+  uuid: string | null;
+  issuerRfc: string | null;
+  issuerName: string | null;
+  receiverRfc: string | null;
+  receiverName: string | null;
+  cfdiUse: string | null;
+  date: string | null;
+  subtotal: number | null;
+  iva: number | null;
+  total: number | null;
+};
 
-function getTag(xml: string, tagName: string) {
-  const escaped = tagName.replace(":", "\\:");
-  return xml.match(new RegExp(`<[^>]*${escaped}[^>]*>`, "i"))?.[0] ?? null;
+function getTagByLocalName(xml: string, localName: string) {
+  const regex = new RegExp(`<[a-zA-Z0-9_:-]*:?${localName}\\b[^>]*>`, "i");
+  return xml.match(regex)?.[0] ?? null;
 }
 
-function getAttribute(tag: string | null, attr: string) {
-  if (!tag) return null;
-  return tag.match(new RegExp(`${attr}=[\"']([^\"']+)[\"']`, "i"))?.[1] ?? null;
+function getAttr(source: string | null, attrName: string) {
+  if (!source) return null;
+
+  const regex = new RegExp(`(?:\\s|^)${attrName}\\s*=\\s*"([^"]*)"`, "i");
+  return source.match(regex)?.[1] ?? null;
 }
 
-function getNumber(value: string | null) {
+function toNumber(value: string | null) {
   if (!value) return null;
+
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function parseCfdiXml(xml: string): XmlInvoiceData {
-  const comprobante = getTag(xml, "Comprobante");
-  const emisor = getTag(xml, "Emisor");
-  const receptor = getTag(xml, "Receptor");
-  const timbre = getTag(xml, "TimbreFiscalDigital");
-  const traslados = Array.from(xml.matchAll(/<[^>]*Traslado[^>]*>/gi)).map(
-    (match) => match[0]
-  );
-  const ivaTraslado = traslados.find((tag) =>
-    /Impuesto=[\"']002[\"']/i.test(tag)
+function getIva(xml: string) {
+  const impuestosTag = getTagByLocalName(xml, "Impuestos");
+  const totalImpuestosTrasladados = toNumber(
+    getAttr(impuestosTag, "TotalImpuestosTrasladados")
   );
 
+  if (totalImpuestosTrasladados !== null) {
+    return totalImpuestosTrasladados;
+  }
+
+  const trasladoIvaMatches = [
+    ...xml.matchAll(
+      /<[^>]*Traslado\b[^>]*Impuesto="002"[^>]*Importe="([^"]+)"[^>]*\/?>/gi
+    ),
+  ];
+
+  const iva = trasladoIvaMatches.reduce((sum, match) => {
+    const value = Number(match[1]);
+    return Number.isFinite(value) ? sum + value : sum;
+  }, 0);
+
+  return iva || null;
+}
+
+export function parseCfdiXml(xml: string): ParsedCfdi {
+  const comprobanteTag = getTagByLocalName(xml, "Comprobante");
+  const emisorTag = getTagByLocalName(xml, "Emisor");
+  const receptorTag = getTagByLocalName(xml, "Receptor");
+  const timbreTag = getTagByLocalName(xml, "TimbreFiscalDigital");
+
   return {
-    uuid: getAttribute(timbre, "UUID"),
-    issuerRfc: getAttribute(emisor, "Rfc") ?? getAttribute(emisor, "rfc"),
-    issuerName: getAttribute(emisor, "Nombre") ?? getAttribute(emisor, "nombre"),
-    receiverRfc:
-      getAttribute(receptor, "Rfc") ?? getAttribute(receptor, "rfc"),
-    receiverName:
-      getAttribute(receptor, "Nombre") ?? getAttribute(receptor, "nombre"),
-    cfdiUse: getAttribute(receptor, "UsoCFDI"),
-    date: getAttribute(comprobante, "Fecha"),
-    subtotal: getNumber(getAttribute(comprobante, "SubTotal")),
-    iva: getNumber(getAttribute(ivaTraslado ?? null, "Importe")),
-    total: getNumber(getAttribute(comprobante, "Total")),
+    uuid: getAttr(timbreTag, "UUID"),
+    issuerRfc: getAttr(emisorTag, "Rfc"),
+    issuerName: getAttr(emisorTag, "Nombre"),
+    receiverRfc: getAttr(receptorTag, "Rfc"),
+    receiverName: getAttr(receptorTag, "Nombre"),
+    cfdiUse: getAttr(receptorTag, "UsoCFDI"),
+    date: getAttr(comprobanteTag, "Fecha"),
+    subtotal: toNumber(getAttr(comprobanteTag, "SubTotal")),
+    iva: getIva(xml),
+    total: toNumber(getAttr(comprobanteTag, "Total")),
   };
 }
 
-export function validateInvoiceAgainstExpense(input: {
-  xml: string;
-  businessRfc?: string | null;
-  expenseAmount?: number | null;
-}) {
-  const invoice = parseCfdiXml(input.xml);
+export type CfdiValidationResult = {
+  valid: boolean;
+  status: "validated" | "needs_correction";
+  errors: string[];
+  humanMessage: string;
+};
+
+type ValidateCfdiParams = {
+  parsed: ParsedCfdi;
+  expectedReceiverRfc?: string | null;
+  expectedTotal?: number | null;
+};
+
+export function validateCfdi({
+  parsed,
+  expectedReceiverRfc,
+  expectedTotal,
+}: ValidateCfdiParams): CfdiValidationResult {
   const errors: string[] = [];
 
-  if (!input.xml.trim().startsWith("<")) errors.push("invalid_xml");
-  if (!invoice.uuid) errors.push("missing_uuid");
-  if (!invoice.issuerRfc) errors.push("missing_issuer_rfc");
-  if (!invoice.receiverRfc) errors.push("missing_receiver_rfc");
-  if (!invoice.total) errors.push("missing_total");
+  if (!parsed.uuid) {
+    errors.push("missing_uuid");
+  }
+
+  if (!parsed.issuerRfc) {
+    errors.push("missing_issuer_rfc");
+  }
+
+  if (!parsed.receiverRfc) {
+    errors.push("missing_receiver_rfc");
+  }
 
   if (
-    input.businessRfc &&
-    invoice.receiverRfc &&
-    input.businessRfc.toUpperCase() !== invoice.receiverRfc.toUpperCase()
+    expectedReceiverRfc &&
+    parsed.receiverRfc &&
+    parsed.receiverRfc.toUpperCase() !== expectedReceiverRfc.toUpperCase()
   ) {
     errors.push("receiver_rfc_mismatch");
   }
 
-  if (input.expenseAmount && invoice.total) {
-    const difference = Math.abs(input.expenseAmount - invoice.total);
-    if (difference > 1) errors.push("total_mismatch");
+  if (
+    expectedTotal !== null &&
+    expectedTotal !== undefined &&
+    parsed.total !== null
+  ) {
+    const difference = Math.abs(Number(parsed.total) - Number(expectedTotal));
+
+    if (difference > 1) {
+      errors.push("total_mismatch");
+    }
   }
 
-  if (!invoice.iva || invoice.iva <= 0) errors.push("missing_iva");
+  if (!parsed.iva || parsed.iva <= 0) {
+    errors.push("missing_iva");
+  }
+
+  const valid = errors.length === 0;
 
   return {
-    valid: errors.length === 0,
-    invoice,
+    valid,
+    status: valid ? "validated" : "needs_correction",
     errors,
-    humanMessage: buildHumanValidationMessage(errors),
+    humanMessage: buildHumanMessage(errors),
   };
 }
 
-export function buildHumanValidationMessage(errors: string[]) {
+function buildHumanMessage(errors: string[]) {
   if (errors.length === 0) {
-    return "Factura validada correctamente. El XML ya puede ligarse al egreso.";
+    return "La factura fue validada correctamente y se ligó al egreso.";
   }
 
   const messages: Record<string, string> = {
-    invalid_xml: "El archivo no parece ser un XML válido.",
     missing_uuid: "No encontramos el UUID fiscal dentro del XML.",
-    missing_issuer_rfc: "No encontramos el RFC emisor del proveedor.",
-    missing_receiver_rfc: "No encontramos el RFC receptor del negocio.",
+    missing_issuer_rfc: "No encontramos el RFC del emisor dentro del XML.",
+    missing_receiver_rfc: "No encontramos el RFC del receptor dentro del XML.",
     receiver_rfc_mismatch:
-      "El RFC receptor no coincide con los datos fiscales registrados del negocio.",
-    missing_total: "No encontramos el total de la factura.",
-    total_mismatch: "El total del XML no coincide con el monto registrado del gasto.",
+      "El RFC receptor de la factura no coincide con los datos fiscales del negocio.",
+    total_mismatch:
+      "El total del XML no coincide con el monto registrado del gasto.",
     missing_iva:
-      "No encontramos IVA trasladado en el XML. Requiere revisión antes de considerarlo acreditable.",
+      "No encontramos IVA trasladado dentro del XML.",
   };
 
   return errors.map((error) => messages[error] ?? error).join(" ");
