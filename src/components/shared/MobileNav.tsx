@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, LayoutDashboard, FileText, BarChart3, Settings, Wallet } from "lucide-react";
+import { Menu, LayoutDashboard, FileText, BarChart3, Settings, Wallet, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { logout } from "@/app/auth/actions";
 import {
   Sheet,
   SheetContent,
@@ -76,6 +77,15 @@ export function MobileNav() {
             );
           })}
         </nav>
+        
+        <div className="absolute bottom-6 left-0 px-6 w-full">
+          <form action={logout}>
+            <button type="submit" className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors">
+              <LogOut className="w-4 h-4" />
+              Cerrar Sesión
+            </button>
+          </form>
+        </div>
       </SheetContent>
     </Sheet>
   );

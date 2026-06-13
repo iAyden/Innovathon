@@ -76,13 +76,34 @@ export async function signup(prevState: any, formData: FormData) {
     return { error: 'Por favor, ingresa un correo electrónico con un formato válido.' }
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
   })
 
   if (error) {
     return { error: translateAuthError(error) }
+  }
+
+  // Creación de Multi-Tenant: Si el usuario se creó correctamente, creamos su organización base.
+  if (data?.user) {
+    const { data: orgData, error: orgError } = await supabase
+      .from('organizations')
+      .insert({ name: 'Mi Organización' })
+      .select('id')
+      .single()
+
+    if (orgData && !orgError) {
+      await supabase
+        .from('organization_members')
+        .insert({
+          organization_id: orgData.id,
+          user_id: data.user.id,
+          role: 'owner'
+        })
+    } else {
+      console.error("Error creating organization:", orgError)
+    }
   }
 
   revalidatePath('/', 'layout')
