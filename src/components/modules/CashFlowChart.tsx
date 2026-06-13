@@ -1,14 +1,14 @@
 "use client";
 
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
 } from "recharts";
 import {
   Card,
@@ -19,129 +19,74 @@ import {
 } from "@/components/ui/card";
 import type { CashFlowEntry } from "@/types";
 
-const data: CashFlowEntry[] = [
-  { month: "Ene", income: 186000, expenses: 120000 },
-  { month: "Feb", income: 205000, expenses: 135000 },
-  { month: "Mar", income: 237000, expenses: 148000 },
-  { month: "Abr", income: 193000, expenses: 142000 },
-  { month: "May", income: 259000, expenses: 156000 },
-  { month: "Jun", income: 274000, expenses: 163000 },
-];
-
-function formatCurrency(value: number): string {
+function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
-    minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
 }
 
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: Array<{
-    value: number;
-    dataKey: string;
-    color: string;
-  }>;
-  label?: string;
+function monthLabel(value: string) {
+  const date = new Date(`${value}-01T12:00:00`);
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat("es-MX", { month: "short" }).format(date);
 }
 
-function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
-  if (!active || !payload) return null;
+export function CashFlowChart({ data }: { data: CashFlowEntry[] }) {
+  const chartData = data.map((entry) => ({
+    ...entry,
+    month: monthLabel(entry.month),
+  }));
 
-  return (
-    <div className="rounded-lg border border-border bg-card p-3 shadow-lg">
-      <p className="text-sm font-medium mb-2">{label}</p>
-      {payload.map((entry) => (
-        <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
-          <div
-            className="w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: entry.color }}
-          />
-          <span className="text-muted-foreground">
-            {entry.dataKey === "income" ? "Ingresos" : "Gastos"}:
-          </span>
-          <span className="font-medium">{formatCurrency(entry.value)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function CashFlowChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Flujo de Caja</CardTitle>
+        <CardTitle>Flujo de caja</CardTitle>
         <CardDescription>
-          Ingresos vs gastos de los últimos 6 meses
+          Entradas y salidas registradas en los ultimos 6 meses.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] sm:h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={data}
-              margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                className="stroke-border"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="month"
-                className="text-xs"
-                tickLine={false}
-                axisLine={false}
-                dy={10}
-              />
-              <YAxis
-                className="text-xs"
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value: number) =>
-                  `$${(value / 1000).toFixed(0)}k`
-                }
-                dx={-10}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                verticalAlign="top"
-                height={36}
-                formatter={(value: string) =>
-                  value === "income" ? "Ingresos" : "Gastos"
-                }
-              />
-              <Area
-                type="monotone"
-                dataKey="income"
-                stroke="#10b981"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorIncome)"
-              />
-              <Area
-                type="monotone"
-                dataKey="expenses"
-                stroke="#f97316"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorExpenses)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {chartData.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              Registra movimientos para visualizar tendencias.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value: number) => `$${value / 1000}k`}
+                />
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                <Legend
+                  formatter={(value: string) =>
+                    value === "income" ? "Entradas" : "Salidas"
+                  }
+                />
+                <Area
+                  type="monotone"
+                  dataKey="income"
+                  stroke="#10b981"
+                  fill="#10b981"
+                  fillOpacity={0.15}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="expenses"
+                  stroke="#f97316"
+                  fill="#f97316"
+                  fillOpacity={0.15}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </CardContent>
     </Card>

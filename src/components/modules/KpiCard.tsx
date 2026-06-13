@@ -56,7 +56,6 @@ export function KpiCard({ title, value, change, changeType, icon: Icon }: KpiCar
           >
             {change}
           </span>
-          <span className="text-xs text-muted-foreground">vs mes anterior</span>
         </div>
       </CardContent>
     </Card>

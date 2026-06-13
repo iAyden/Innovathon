@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from "node:fs";
 
 try {
   const data = JSON.parse(fs.readFileSync('schema.json', 'utf8'));

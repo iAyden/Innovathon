@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pulso AI
 
-## Getting Started
+Plataforma de organizacion financiera, operativa y fiscal para microempresas
+mexicanas.
 
-First, run the development server:
+## Desarrollo
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La aplicacion usa Next.js 16, React 19, Supabase y Tailwind CSS.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Base de datos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+El esquema fiscal existente incluye organizaciones, miembros, perfiles fiscales,
+proveedores, egresos, archivos CFDI y solicitudes de factura.
 
-## Learn More
+Antes de usar perfil operativo, modulos, flujo de caja o integraciones, aplica:
 
-To learn more about Next.js, take a look at the following resources:
+```text
+supabase/migrations/202606130001_pulso_ai_core.sql
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+La migracion agrega:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `business_profiles`
+- `module_catalog`
+- `organization_modules`
+- `cash_flow_entries`
+- `business_documents`
+- `integration_events`
+- politicas RLS por membresia de organizacion
 
-## Deploy on Vercel
+## n8n
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Copia `.env.example` a tu configuracion local y agrega solo los webhooks que
+quieras activar. La pantalla `/dashboard/integrations` muestra el estado de cada
+workflow.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Cada webhook recibe:
+
+```json
+{
+  "version": "1.0",
+  "event": "cashflow-forecast",
+  "correlationId": "uuid",
+  "organizationId": "uuid",
+  "occurredAt": "ISO-8601",
+  "data": {}
+}
+```
+
+Si existe `N8N_WEBHOOK_SECRET`, Pulso envia la firma HMAC SHA-256 en
+`x-pulso-signature`.
+
+Los procesos asincronos pueden responder en:
+
+```text
+POST /api/integrations/n8n/callback/[workflow]
+```
+
+El callback requiere `x-pulso-callback-secret`, cuyo valor debe coincidir con
+`N8N_CALLBACK_SECRET`.
+
+## Verificacion
+
+```bash
+npm run lint
+npx tsc --noEmit --incremental false
+npm run build
+```

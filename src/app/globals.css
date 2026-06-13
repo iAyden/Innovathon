@@ -1,7 +1,11 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @import "@fontsource-variable/fraunces/index.css";
 @import "@fontsource-variable/inter/index.css";
 @import "@fontsource/ibm-plex-mono/index.css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
@@ -10,124 +14,139 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 4px);
-  --radius-sm: calc(var(--radius) - 8px);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-/*
-  Capataz — tema oscuro
-  Verde-negro de fondo, acentos verde (WhatsApp/activo) y ámbar (sello/COFEPRIS).
-  Fraunces para encabezados, Inter para cuerpo, IBM Plex Mono para datos/timestamps.
-*/
 :root,
 .dark {
   --background: #284033ee;
-  --foreground: #EFEEE6;
-
-  --card: #18221C;
-  --card-foreground: #EFEEE6;
-
-  --popover: #1F2B24;
-  --popover-foreground: #EFEEE6;
-
-  /* Primary = ámbar "sello", para acciones principales */
+  --foreground: #efeee6;
+  --card: #18221c;
+  --card-foreground: #efeee6;
+  --popover: #1f2b24;
+  --popover-foreground: #efeee6;
   --primary: #ffffff;
-  --primary-foreground: #1A1306;
-
-  /* Secondary = superficie elevada, texto claro */
-  --secondary: #1F2B24;
-  --secondary-foreground: #EFEEE6;
-
-  --muted: #1F2B24;
-  --muted-foreground: #8FA398;
-
-  /* Accent = verde "activo/en vivo" */
-  --accent: #1E5C3A;
-  --accent-foreground: #DDF6E6;
-
-  --destructive: #E2A37C;
-  --destructive-foreground: #1A1306;
-
-  --border: #2B3A32;
-  --input: #2B3A32;
-  --ring: #E8C27E;
-
+  --primary-foreground: #1a1306;
+  --secondary: #1f2b24;
+  --secondary-foreground: #efeee6;
+  --muted: #1f2b24;
+  --muted-foreground: #8fa398;
+  --accent: #1e5c3a;
+  --accent-foreground: #ddf6e6;
+  --destructive: #e2a37c;
+  --destructive-foreground: #1a1306;
+  --border: #2b3a32;
+  --input: #2b3a32;
+  --ring: #e8c27e;
+  --chart-1: #e8c27e;
+  --chart-2: #2bd66b;
+  --chart-3: #8fa398;
+  --chart-4: #e2a37c;
+  --chart-5: #4a2e1e;
+  --sidebar: #18221c;
+  --sidebar-foreground: #efeee6;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #1a1306;
+  --sidebar-accent: #1e5c3a;
+  --sidebar-accent-foreground: #ddf6e6;
+  --sidebar-border: #2b3a32;
+  --sidebar-ring: #e8c27e;
   --radius: 14px;
 }
 
-/* Capataz nunca cambia a modo claro: ambas clases apuntan al tema oscuro */
+/* Capataz keeps the dark palette when a light class is present. */
 .light {
-  --background: #0F1612;
-  --foreground: #EFEEE6;
-  --card: #18221C;
-  --card-foreground: #EFEEE6;
-  --popover: #1F2B24;
-  --popover-foreground: #EFEEE6;
-  --primary: #E8C27E;
-  --primary-foreground: #1A1306;
-  --secondary: #1F2B24;
-  --secondary-foreground: #EFEEE6;
-  --muted: #1F2B24;
-  --muted-foreground: #8FA398;
-  --accent: #1E5C3A;
-  --accent-foreground: #DDF6E6;
-  --destructive: #E2A37C;
-  --destructive-foreground: #1A1306;
-  --border: #2B3A32;
-  --input: #2B3A32;
-  --ring: #E8C27E;
+  --background: #0f1612;
+  --foreground: #efeee6;
+  --card: #18221c;
+  --card-foreground: #efeee6;
+  --popover: #1f2b24;
+  --popover-foreground: #efeee6;
+  --primary: #e8c27e;
+  --primary-foreground: #1a1306;
+  --secondary: #1f2b24;
+  --secondary-foreground: #efeee6;
+  --muted: #1f2b24;
+  --muted-foreground: #8fa398;
+  --accent: #1e5c3a;
+  --accent-foreground: #ddf6e6;
+  --destructive: #e2a37c;
+  --destructive-foreground: #1a1306;
+  --border: #2b3a32;
+  --input: #2b3a32;
+  --ring: #e8c27e;
+  --chart-1: #e8c27e;
+  --chart-2: #2bd66b;
+  --chart-3: #8fa398;
+  --chart-4: #e2a37c;
+  --chart-5: #4a2e1e;
+  --sidebar: #18221c;
+  --sidebar-foreground: #efeee6;
+  --sidebar-primary: #e8c27e;
+  --sidebar-primary-foreground: #1a1306;
+  --sidebar-accent: #1e5c3a;
+  --sidebar-accent-foreground: #ddf6e6;
+  --sidebar-border: #2b3a32;
+  --sidebar-ring: #e8c27e;
   --radius: 14px;
 }
 
 @layer base {
   * {
-    border-color: var(--border);
+    @apply border-border outline-ring/50;
   }
+
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    @apply bg-background text-foreground;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+
   .font-heading {
     font-family: var(--font-heading);
     font-weight: 600;
   }
 }
 
-/*
-  Estado "en vivo" — para usar junto al Badge en agentes activos:
-  <Badge className="status-live">activo</Badge>
-*/
 @layer utilities {
   .status-live {
     position: relative;
   }
+
   .status-live::before {
     content: "";
     display: inline-block;
@@ -135,19 +154,25 @@
     height: 7px;
     margin-right: 2px;
     border-radius: 50%;
-    background: #2BD66B;
+    background: #2bd66b;
     box-shadow: 0 0 0 0 rgba(43, 214, 107, 0.6);
     animation: capataz-pulse 2s infinite;
   }
-  @keyframes capataz-pulse {
-    0% { box-shadow: 0 0 0 0 rgba(43, 214, 107, 0.55); }
-    70% { box-shadow: 0 0 0 6px rgba(43, 214, 107, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(43, 214, 107, 0); }
-  }
 
-  /* Variante "coral" para destacar inteligencia/IA, alternativa a destructive */
   .badge-coral {
-    background-color: #4A2E1E;
-    color: #E2A37C;
+    background-color: #4a2e1e;
+    color: #e2a37c;
+  }
+}
+
+@keyframes capataz-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(43, 214, 107, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(43, 214, 107, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(43, 214, 107, 0);
   }
 }

@@ -18,7 +18,7 @@ export default function RegisterPage() {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
           <Wallet className="h-4 w-4 text-primary-foreground" />
         </div>
-        <span>FinFlow</span>
+        <span>Pulso AI</span>
       </Link>
       
       <Card className="w-full max-w-sm">
@@ -36,12 +36,21 @@ export default function RegisterPage() {
               </div>
             )}
             <div className="space-y-2">
+              <Label htmlFor="businessName">Nombre del negocio</Label>
+              <Input
+                id="businessName"
+                name="businessName"
+                placeholder="Abarrotes La Esperanza"
+                required
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" placeholder="m@ejemplo.com" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input id="password" name="password" type="password" required />
+              <Input id="password" name="password" type="password" minLength={8} required />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">

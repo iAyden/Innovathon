@@ -21,17 +21,18 @@ export function AccessibilityProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [fontSize, setFontSize] = React.useState<FontSize>("normal");
-  const [contrast, setContrast] = React.useState<Contrast>("normal");
-
-  // Load from localStorage on mount
-  React.useEffect(() => {
-    const savedFontSize = localStorage.getItem("a11y-font-size") as FontSize;
-    const savedContrast = localStorage.getItem("a11y-contrast") as Contrast;
-    
-    if (savedFontSize) setFontSize(savedFontSize);
-    if (savedContrast) setContrast(savedContrast);
-  }, []);
+  const [fontSize, setFontSize] = React.useState<FontSize>(() => {
+    if (typeof window === "undefined") return "normal";
+    return localStorage.getItem("a11y-font-size") === "large"
+      ? "large"
+      : "normal";
+  });
+  const [contrast, setContrast] = React.useState<Contrast>(() => {
+    if (typeof window === "undefined") return "normal";
+    return localStorage.getItem("a11y-contrast") === "high"
+      ? "high"
+      : "normal";
+  });
 
   // Apply classes to HTML element when state changes
   React.useEffect(() => {

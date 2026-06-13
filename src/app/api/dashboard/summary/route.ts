@@ -1,48 +1,81 @@
 import { NextResponse } from "next/server";
-import { buildDemoSummary, demoExpenses } from "@/lib/demo-data";
-import { getDemoOrganizationId, getSupabaseAdmin } from "@/lib/supabase-admin";
+import { requireOrganization } from "@/lib/server/auth";
+import { errorResponse } from "@/lib/server/http";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
+
+const RISKY_STATUSES = [
+  "missing_invoice",
+  "request_sent",
+  "needs_correction",
+  "expired",
+];
 
 export async function GET() {
-  const supabase = getSupabaseAdmin();
+  try {
+    const context = await requireOrganization();
+    const admin = getSupabaseAdmin();
 
-  if (!supabase) {
-    return NextResponse.json(buildDemoSummary(demoExpenses));
+    if (!admin) {
+      throw new Error("Supabase no esta configurado.");
+    }
+
+    const { data, error } = await admin
+      .from("expenses")
+      .select("amount, iva_amount, status, expense_date")
+      .eq("organization_id", context.organizationId)
+      .order("expense_date", { ascending: true });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const rows = data ?? [];
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const monthlyRows = rows.filter((row) =>
+      String(row.expense_date).startsWith(currentMonth),
+    );
+    const pending = monthlyRows.filter((row) =>
+      RISKY_STATUSES.includes(row.status),
+    );
+    const monthMap = new Map<string, number>();
+
+    rows.forEach((row) => {
+      const month = String(row.expense_date).slice(0, 7);
+      monthMap.set(month, (monthMap.get(month) ?? 0) + Number(row.amount ?? 0));
+    });
+
+    const cashFlow = Array.from(monthMap.entries())
+      .slice(-6)
+      .map(([month, expenses]) => ({
+        month,
+        income: 0,
+        expenses,
+      }));
+
+    return NextResponse.json({
+      monthlyExpenses: monthlyRows.reduce(
+        (sum, row) => sum + Number(row.amount ?? 0),
+        0,
+      ),
+      expensesWithoutInvoice: pending.reduce(
+        (sum, row) => sum + Number(row.amount ?? 0),
+        0,
+      ),
+      ivaAtRisk: pending.reduce(
+        (sum, row) => sum + Number(row.iva_amount ?? 0),
+        0,
+      ),
+      ivaRecovered: monthlyRows
+        .filter((row) => row.status === "validated")
+        .reduce((sum, row) => sum + Number(row.iva_amount ?? 0), 0),
+      pendingInvoices: pending.length,
+      validatedInvoices: monthlyRows.filter(
+        (row) => row.status === "validated",
+      ).length,
+      suppliersWithLowCompliance: 0,
+      cashFlow,
+    });
+  } catch (error) {
+    return errorResponse(error);
   }
-
-  const organizationId = process.env.DEMO_ORG_ID ?? getDemoOrganizationId();
-  const { data, error } = await supabase
-    .from("expenses")
-    .select("amount, iva_amount, status")
-    .eq("organization_id", organizationId);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  const rows = data ?? [];
-  const riskyStatuses = ["missing_invoice", "request_sent", "needs_correction", "expired"];
-  const monthlyExpenses = rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-  const expensesWithoutInvoice = rows
-    .filter((row) => riskyStatuses.includes(row.status))
-    .reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-  const ivaAtRisk = rows
-    .filter((row) => riskyStatuses.includes(row.status))
-    .reduce((sum, row) => sum + Number(row.iva_amount ?? 0), 0);
-  const ivaRecovered = rows
-    .filter((row) => row.status === "validated")
-    .reduce((sum, row) => sum + Number(row.iva_amount ?? 0), 0);
-
-  return NextResponse.json({
-    monthlyExpenses,
-    expensesWithoutInvoice,
-    ivaAtRisk,
-    ivaRecovered,
-    pendingInvoices: rows.filter((row) => row.status !== "validated").length,
-    validatedInvoices: rows.filter((row) => row.status === "validated").length,
-    suppliersWithLowCompliance: 0,
-    insight:
-      ivaAtRisk > 0
-        ? `Tienes ${ivaAtRisk.toLocaleString("es-MX", { style: "currency", currency: "MXN" })} de IVA estimado en riesgo. Prioriza solicitar XML a tus proveedores pendientes.`
-        : "No tienes IVA en riesgo detectado. Tus facturas del mes van al día.",
-  });
 }

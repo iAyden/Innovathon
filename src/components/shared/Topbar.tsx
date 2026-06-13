@@ -1,12 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { Bell, Search } from "lucide-react";
+import { logout } from "@/app/auth/actions";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,62 +13,77 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { MobileNav } from "./MobileNav";
-import { logout } from "@/app/auth/actions";
 
-export function Topbar() {
+export function Topbar({
+  displayName,
+  email,
+}: {
+  displayName: string;
+  email: string;
+}) {
+  const initials = displayName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card/80 backdrop-blur-sm px-4 lg:px-6">
-      {/* Mobile navigation */}
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card/80 px-4 backdrop-blur-sm lg:px-6">
       <MobileNav />
-
-      {/* Search */}
-      <div className="hidden md:flex flex-1 max-w-sm">
+      <div className="hidden max-w-sm flex-1 md:flex">
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Buscar facturas, proveedores..."
-            className="pl-9 bg-muted/50 border-none"
+            className="border-none bg-muted/50 pl-9"
           />
         </div>
       </div>
-
       <div className="flex-1 md:flex-none" />
-
-      {/* Right side actions */}
       <div className="flex items-center gap-2">
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon">
           <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
           <span className="sr-only">Notificaciones</span>
         </Button>
-
-        {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={<Button variant="ghost" className="relative h-9 w-9 rounded-full" />}
+            render={
+              <Button
+                variant="ghost"
+                className="relative h-9 w-9 rounded-full"
+              />
+            }
           >
             <Avatar className="h-9 w-9">
-              <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                DB
+              <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+                {initials || "PA"}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">Daniel Beltrán</p>
-                <p className="text-xs text-muted-foreground">daniel@finflow.com</p>
+                <p className="text-sm font-medium">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{email}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Perfil</DropdownMenuItem>
-            <DropdownMenuItem>Configuración</DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/dashboard/profile" />}>
+              Perfil del negocio
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/dashboard/integrations" />}>
+              Integraciones
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={() => logout()}>
-              Cerrar Sesión
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => logout()}
+            >
+              Cerrar sesion
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
