@@ -3,6 +3,7 @@ import {
   applyDocumentReviewRules,
   isDocumentAnalysis,
   normalizeDocumentAmounts,
+  normalizeDocumentItems,
 } from "@/lib/document-analysis";
 import { requireOrganization } from "@/lib/server/auth";
 import { errorResponse, HttpError } from "@/lib/server/http";
@@ -61,7 +62,9 @@ export async function POST(request: Request) {
     const rawAnalysis = automation.ok ? (automation.data ?? {}) : {};
     const validAnalysis = isDocumentAnalysis(rawAnalysis);
     const normalizedAnalysis = validAnalysis
-      ? applyDocumentReviewRules(normalizeDocumentAmounts(rawAnalysis))
+      ? applyDocumentReviewRules(
+          normalizeDocumentAmounts(normalizeDocumentItems(rawAnalysis)),
+        )
       : null;
     const analysis = normalizedAnalysis ?? rawAnalysis;
     const analysisSucceeded = Boolean(automation.ok && validAnalysis);

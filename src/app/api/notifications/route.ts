@@ -3,6 +3,7 @@ import {
   applyDocumentReviewRules,
   isDocumentAnalysis,
   normalizeDocumentAmounts,
+  normalizeDocumentItems,
 } from "@/lib/document-analysis";
 import { requireOrganization } from "@/lib/server/auth";
 import { errorResponse } from "@/lib/server/http";
@@ -32,7 +33,7 @@ export async function GET() {
       if (!isDocumentAnalysis(candidate)) return [];
 
       const analysis = applyDocumentReviewRules(
-        normalizeDocumentAmounts(candidate),
+        normalizeDocumentAmounts(normalizeDocumentItems(candidate)),
       );
       const extracted = analysis.extractedData;
       if (!extracted.reviewRequired || extracted.reviewed) return [];

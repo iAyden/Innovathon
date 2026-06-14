@@ -10,6 +10,7 @@ import {
   Landmark,
   Lightbulb,
   Loader2,
+  Package,
   ReceiptText,
   Upload,
   X,
@@ -26,6 +27,8 @@ import {
 import {
   type DocumentAnalysis,
   type DocumentCurrency,
+  type DocumentLineItem,
+  type DocumentLineType,
   isDocumentAnalysis,
 } from "@/lib/document-analysis";
 import { cn } from "@/lib/utils";
@@ -420,6 +423,55 @@ export function DocumentAnalysisCard({
         />
       </div>
 
+      {(data.items ?? []).length > 0 && (
+        <div>
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <Package className="h-4 w-4" />
+            Desglose detectado
+          </p>
+          <div className="mt-2 overflow-x-auto rounded-lg border">
+            <div className="min-w-[620px]">
+              <div className="grid grid-cols-[minmax(220px,1fr)_90px_130px_130px] gap-3 border-b bg-muted/50 px-3 py-2 text-xs font-medium text-muted-foreground">
+                <span>Concepto</span>
+                <span>Cantidad</span>
+                <span>Precio unitario</span>
+                <span>Total</span>
+              </div>
+              {(data.items ?? []).map((item, index) => (
+                <div
+                  key={`${item.name}-${index}`}
+                  className="grid grid-cols-[minmax(220px,1fr)_90px_130px_130px] gap-3 border-b px-3 py-3 text-sm last:border-b-0"
+                >
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">
+                        {item.name || "Producto sin identificar"}
+                      </span>
+                      <LineTypeBadge item={item} />
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {item.sku ? `SKU: ${item.sku} · ` : ""}
+                      Confianza {Math.round(item.confidence * 100)}%
+                    </p>
+                  </div>
+                  <span>
+                    {formatQuantity(item.quantity)} {item.unit}
+                  </span>
+                  <span>{formatAmount(item.unitPrice, data.currency)}</span>
+                  <span className="font-medium">
+                    {formatAmount(item.total, data.currency)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Solo las líneas marcadas como Inventario quedan preparadas para
+            revisión antes de enviarlas al módulo de inventario.
+          </p>
+        </div>
+      )}
+
       {data.paymentMethod && (
         <p className="text-xs text-muted-foreground">
           Método de pago:{" "}
@@ -470,6 +522,31 @@ export function DocumentAnalysisCard({
       )}
     </div>
   );
+}
+
+function LineTypeBadge({ item }: { item: DocumentLineItem }) {
+  const lineType: DocumentLineType =
+    item.lineType ?? (item.inventoryCandidate ? "product" : "other");
+  const labels: Record<DocumentLineType, string> = {
+    product: "Inventario",
+    service: "Servicio",
+    discount: "Descuento",
+    tax: "Impuesto",
+    charge: "Cargo",
+    other: "Otro",
+  };
+
+  return (
+    <Badge variant={lineType === "discount" ? "outline" : "secondary"}>
+      {labels[lineType]}
+    </Badge>
+  );
+}
+
+function formatQuantity(value: number) {
+  return new Intl.NumberFormat("es-MX", {
+    maximumFractionDigits: 3,
+  }).format(value);
 }
 
 function DocumentField({

@@ -3,6 +3,7 @@ import {
   applyDocumentReviewRules,
   isDocumentAnalysis,
   normalizeDocumentAmounts,
+  normalizeDocumentItems,
 } from "@/lib/document-analysis";
 import { requireOrganization } from "@/lib/server/auth";
 import { errorResponse, HttpError } from "@/lib/server/http";
@@ -61,7 +62,7 @@ export async function PATCH(
       throw new HttpError("El documento no tiene un análisis válido.", 409);
     }
     const analysis = applyDocumentReviewRules(
-      normalizeDocumentAmounts(rawAnalysis),
+      normalizeDocumentAmounts(normalizeDocumentItems(rawAnalysis)),
     );
 
     if (action === "classify") {

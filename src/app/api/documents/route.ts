@@ -3,6 +3,7 @@ import {
   applyDocumentReviewRules,
   isDocumentAnalysis,
   normalizeDocumentAmounts,
+  normalizeDocumentItems,
 } from "@/lib/document-analysis";
 import { requireOrganization } from "@/lib/server/auth";
 import { errorResponse } from "@/lib/server/http";
@@ -39,7 +40,9 @@ export async function GET() {
         documentType: document.document_type,
         analysisStatus: document.analysis_status,
         analysis: isDocumentAnalysis(candidate)
-          ? applyDocumentReviewRules(normalizeDocumentAmounts(candidate))
+          ? applyDocumentReviewRules(
+              normalizeDocumentAmounts(normalizeDocumentItems(candidate)),
+            )
           : null,
         createdAt: document.created_at,
         updatedAt: document.updated_at,
