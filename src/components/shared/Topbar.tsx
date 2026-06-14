@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Bell, Search } from "lucide-react";
@@ -28,6 +29,49 @@ export function Topbar({
   const dashboardBase = params.orgId
     ? `/dashboard/${params.orgId}`
     : "/dashboard";
+  const [notifications, setNotifications] = useState<
+    {
+      id: string;
+      title: string;
+      message: string;
+      fileName: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadNotifications() {
+      const response = await fetch("/api/notifications", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json().catch(() => ({}));
+      if (active && Array.isArray(data.notifications)) {
+        setNotifications(data.notifications);
+      }
+    }
+
+    loadNotifications().catch(() => undefined);
+    const handleNotificationsChanged = () => {
+      loadNotifications().catch(() => undefined);
+    };
+    window.addEventListener(
+      "pulso:notifications-changed",
+      handleNotificationsChanged,
+    );
+    const interval = window.setInterval(
+      () => loadNotifications().catch(() => undefined),
+      60000,
+    );
+
+    return () => {
+      active = false;
+      window.removeEventListener(
+        "pulso:notifications-changed",
+        handleNotificationsChanged,
+      );
+      window.clearInterval(interval);
+    };
+  }, []);
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -50,10 +94,59 @@ export function Topbar({
       </div>
       <div className="flex-1 md:flex-none" />
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon">
-          <Bell className="h-4 w-4" />
-          <span className="sr-only">Notificaciones</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+              />
+            }
+          >
+            <Bell className="h-4 w-4" />
+            {notifications.length > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                {notifications.length > 9 ? "9+" : notifications.length}
+              </span>
+            )}
+            <span className="sr-only">Notificaciones</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {notifications.length === 0 ? (
+              <DropdownMenuItem disabled>
+                No hay documentos pendientes.
+              </DropdownMenuItem>
+            ) : (
+              notifications.slice(0, 5).map((notification) => (
+                <DropdownMenuItem
+                  key={notification.id}
+                  render={<Link href={`${dashboardBase}/documents`} />}
+                  className="items-start py-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{notification.title}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                      {notification.fileName}: {notification.message}
+                    </p>
+                  </div>
+                </DropdownMenuItem>
+              ))
+            )}
+            {notifications.length > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  render={<Link href={`${dashboardBase}/documents`} />}
+                >
+                  Ver documentos en revisión
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

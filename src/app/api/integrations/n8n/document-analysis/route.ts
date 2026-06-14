@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  applyDocumentReviewRules,
+  isDocumentAnalysis,
+  normalizeDocumentAmounts,
+} from "@/lib/document-analysis";
 import { requireOrganization } from "@/lib/server/auth";
 import { errorResponse, HttpError } from "@/lib/server/http";
 import { triggerN8n } from "@/lib/server/n8n";
@@ -20,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     const admin = getSupabaseAdmin()!;
-    const { data: document } = await admin
+    const { data: document, error: documentError } = await admin
       .from("business_documents")
       .insert({
         organization_id: context.organizationId,
@@ -30,12 +35,20 @@ export async function POST(request: Request) {
       })
       .select("id")
       .maybeSingle();
+
+    if (documentError || !document) {
+      throw new HttpError(
+        "No se pudo registrar el documento antes de analizarlo.",
+        500,
+      );
+    }
+
     const content = Buffer.from(await file.arrayBuffer()).toString("base64");
     const automation = await triggerN8n({
       workflow: "document-analysis",
       organizationId: context.organizationId,
       payload: {
-        documentId: document?.id ?? null,
+        documentId: document.id,
         file: {
           name: file.name,
           type: file.type,
@@ -45,30 +58,57 @@ export async function POST(request: Request) {
       },
       timeoutMs: 60000,
     });
-    const analysis = automation.ok ? (automation.data ?? {}) : {};
+    const rawAnalysis = automation.ok ? (automation.data ?? {}) : {};
+    const validAnalysis = isDocumentAnalysis(rawAnalysis);
+    const normalizedAnalysis = validAnalysis
+      ? applyDocumentReviewRules(normalizeDocumentAmounts(rawAnalysis))
+      : null;
+    const analysis = normalizedAnalysis ?? rawAnalysis;
+    const analysisSucceeded = Boolean(automation.ok && validAnalysis);
 
-    if (document?.id) {
-      await admin
-        .from("business_documents")
-        .update({
-          analysis_status: automation.ok ? "completed" : "failed",
-          extracted_data: analysis.extractedData ?? analysis,
-          recommendations: Array.isArray(analysis.recommendations)
-            ? analysis.recommendations
-            : [],
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", document.id)
-        .eq("organization_id", context.organizationId);
+    const extractedData =
+      analysis.extractedData &&
+      typeof analysis.extractedData === "object" &&
+      !Array.isArray(analysis.extractedData)
+        ? analysis.extractedData
+        : analysis;
+    const detectedDocumentType =
+      "documentType" in extractedData &&
+      typeof extractedData.documentType === "string"
+        ? extractedData.documentType
+        : "operational-document";
+    const { error: updateError } = await admin
+      .from("business_documents")
+      .update({
+        document_type: detectedDocumentType,
+        analysis_status: analysisSucceeded ? "completed" : "failed",
+        extracted_data: extractedData,
+        recommendations: Array.isArray(analysis.recommendations)
+          ? analysis.recommendations
+          : [],
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", document.id)
+      .eq("organization_id", context.organizationId);
+
+    if (updateError) {
+      throw new HttpError(
+        "El documento fue analizado, pero no se pudo guardar el resultado.",
+        500,
+      );
     }
 
     return NextResponse.json({
+      documentId: document.id,
       configured: automation.configured,
-      success: Boolean(automation.ok),
+      success: analysisSucceeded,
       correlationId: automation.correlationId,
       analysis,
-      message: automation.ok
-        ? "Documento analizado correctamente."
+      message: analysisSucceeded
+        ? normalizedAnalysis?.extractedData.reviewRequired &&
+          !normalizedAnalysis.extractedData.reviewed
+          ? "Documento analizado y enviado a revisión."
+          : "Documento analizado correctamente."
         : automation.configured
           ? "n8n no pudo analizar el documento."
           : "Configura N8N_DOCUMENT_ANALYSIS_WEBHOOK_URL para activar el analisis.",

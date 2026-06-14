@@ -31,7 +31,7 @@ const workflowRoutes: Record<string, string> = {
   "fiscal-profile": "/profile",
   "module-recommendation": "/modules",
   "cashflow-forecast": "/cash-flow",
-  "document-analysis": "",
+  "document-analysis": "/documents",
 };
 
 export default async function IntegrationsPage({
