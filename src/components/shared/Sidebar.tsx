@@ -37,7 +37,6 @@ export const dashboardNavItems: NavItem[] = [
   { title: "Integraciones", href: "/integrations", icon: Workflow },
 ];
 
-import { useBusiness } from "@/contexts/BusinessContext";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,

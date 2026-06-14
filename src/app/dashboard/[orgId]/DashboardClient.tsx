@@ -94,11 +94,7 @@ export function DashboardClient() {
           Resumen financiero, fiscal y operativo del mes actual.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {kpis.map((kpi) => (
-          <KpiCard key={kpi.title} {...kpi} />
-        ))}
-      </div>
+
       <div className="rounded-xl border bg-card p-5">
         {insight ? (
           <>
@@ -159,8 +155,9 @@ export function DashboardClient() {
           </div>
         )}
       </div>
-      <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
           <CashFlowChart data={summary?.cashFlow ?? []} />
         </div>
 
