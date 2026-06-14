@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { CheckCircle2, CircleDashed, Webhook } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, CircleDashed, Webhook } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -21,6 +23,15 @@ const descriptions: Record<string, string> = {
   "module-recommendation": "Recomienda modulos segun giro, retos y metas.",
   "cashflow-forecast": "Produce escenarios de liquidez a 30, 60 y 90 dias.",
   "document-analysis": "Extrae informacion de tickets y documentos operativos.",
+};
+
+const workflowRoutes: Record<string, string> = {
+  "request-invoice": "/dashboard/invoices",
+  "dashboard-insight": "/dashboard",
+  "fiscal-profile": "/dashboard/profile",
+  "module-recommendation": "/dashboard/modules",
+  "cashflow-forecast": "/dashboard/cash-flow",
+  "document-analysis": "/dashboard",
 };
 
 export default function IntegrationsPage() {
@@ -69,6 +80,17 @@ export default function IntegrationsPage() {
               <code className="mt-3 block break-all rounded bg-muted px-2 py-1 text-xs">
                 {workflow.environmentVariable}
               </code>
+              <Link
+                href={workflowRoutes[workflow.workflow]}
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "sm",
+                  className: "mt-3",
+                })}
+              >
+                Abrir modulo
+                <ArrowRight />
+              </Link>
             </div>
           ))}
         </CardContent>

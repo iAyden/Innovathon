@@ -84,9 +84,11 @@ export function ModulesClient() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error ?? "No se pudo recomendar.");
       setMessage(
-        data.automationConfigured
+        data.automationSucceeded
           ? "n8n actualizo las recomendaciones."
-          : "Se aplicaron reglas locales. El workflow de n8n aun no esta configurado.",
+          : data.automationConfigured
+            ? "n8n no respondio correctamente; se aplicaron reglas locales."
+            : "Se aplicaron reglas locales. El workflow de n8n aun no esta configurado.",
       );
       await loadModules();
     } catch (error) {
@@ -106,8 +108,12 @@ export function ModulesClient() {
           </p>
         </div>
         <Button onClick={requestRecommendations} disabled={working !== null}>
-          <Bot className="mr-2 h-4 w-4" />
-          Recomendar con IA
+          {working === "recommend" ? (
+            <RefreshCw className="animate-spin" />
+          ) : (
+            <Bot />
+          )}
+          {working === "recommend" ? "Analizando perfil..." : "Recomendar con IA"}
         </Button>
       </div>
 

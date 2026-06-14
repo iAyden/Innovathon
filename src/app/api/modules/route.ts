@@ -93,6 +93,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         recommendations,
         automationConfigured: automation.configured,
+        automationSucceeded: Boolean(automation.ok),
       });
     }
 

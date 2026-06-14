@@ -16,6 +16,8 @@ interface UploadedFileItem {
   file: File;
   id: string;
   status: "idle" | "uploading" | "success" | "error";
+  analysis?: unknown;
+  message?: string;
 }
 
 interface UploadTicketProps {
@@ -86,33 +88,61 @@ export function UploadTicket({ onUpload }: UploadTicketProps) {
     if (files.length === 0) return;
 
     setIsUploading(true);
-    setFiles((prev) =>
-      prev.map((f) => ({ ...f, status: "uploading" as const }))
-    );
 
     try {
       if (onUpload) {
         await onUpload(files.map((f) => f.file));
+        setFiles((prev) =>
+          prev.map((item) => ({ ...item, status: "success" as const })),
+        );
       } else {
-        for (const item of files) {
+        for (const item of files.filter((file) => file.status !== "success")) {
+          setFiles((prev) =>
+            prev.map((file) =>
+              file.id === item.id
+                ? { ...file, status: "uploading" as const, message: undefined }
+                : file,
+            ),
+          );
           const body = new FormData();
           body.append("file", item.file);
           const response = await fetch(
             "/api/integrations/n8n/document-analysis",
             { method: "POST", body },
           );
-          if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.error ?? "No se pudo procesar el documento.");
-          }
+          const data = await response.json().catch(() => ({}));
+          const succeeded = response.ok && data.success;
+          setFiles((prev) =>
+            prev.map((file) =>
+              file.id === item.id
+                ? {
+                    ...file,
+                    status: succeeded ? "success" : "error",
+                    analysis: succeeded ? data.analysis : undefined,
+                    message:
+                      data.message ??
+                      data.error ??
+                      "No se pudo procesar el documento.",
+                  }
+                : file,
+            ),
+          );
         }
       }
+    } catch (error) {
       setFiles((prev) =>
-        prev.map((f) => ({ ...f, status: "success" as const }))
-      );
-    } catch {
-      setFiles((prev) =>
-        prev.map((f) => ({ ...f, status: "error" as const }))
+        prev.map((file) =>
+          file.status === "uploading"
+            ? {
+                ...file,
+                status: "error" as const,
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : "No se pudo procesar el documento.",
+              }
+            : file,
+        ),
       );
     } finally {
       setIsUploading(false);
@@ -177,7 +207,7 @@ export function UploadTicket({ onUpload }: UploadTicketProps) {
             {files.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border"
+                className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/50 p-3"
               >
                 <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -205,6 +235,16 @@ export function UploadTicket({ onUpload }: UploadTicketProps) {
                     <X className="w-3.5 h-3.5" />
                   </Button>
                 )}
+                {item.message && (
+                  <p className="basis-full text-xs text-muted-foreground">
+                    {item.message}
+                  </p>
+                )}
+                {item.analysis !== undefined && (
+                  <pre className="basis-full overflow-x-auto rounded-md bg-background p-3 text-xs">
+                    {JSON.stringify(item.analysis, null, 2)}
+                  </pre>
+                )}
               </div>
             ))}
           </div>
@@ -226,7 +266,7 @@ export function UploadTicket({ onUpload }: UploadTicketProps) {
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Subir {files.length} archivo{files.length !== 1 ? "s" : ""}
+                  Analizar con IA
                 </>
               )}
             </Button>

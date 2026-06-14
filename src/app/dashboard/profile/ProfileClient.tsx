@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { Building2, FileSearch, Save, Upload } from "lucide-react";
+import { Building2, FileSearch, Loader2, Save, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,7 +17,17 @@ type ProfileResponse = {
   organization: { name: string };
   businessProfile: Record<string, unknown> | null;
   taxProfile: Record<string, unknown> | null;
+  fiscalAnalysis: {
+    recommendations?: unknown;
+  } | null;
   user: { email: string | null };
+};
+
+type FiscalRecommendation = {
+  priority?: string;
+  title?: string;
+  description?: string;
+  requiresAccountant?: boolean;
 };
 
 const initialForm = {
@@ -52,6 +62,9 @@ export function ProfileClient() {
   const [saving, setSaving] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<FiscalRecommendation[]>(
+    [],
+  );
 
   useEffect(() => {
     let active = true;
@@ -64,6 +77,11 @@ export function ProfileClient() {
         if (!active) return;
         const business = data.businessProfile;
         const tax = data.taxProfile;
+        setRecommendations(
+          Array.isArray(data.fiscalAnalysis?.recommendations)
+            ? data.fiscalAnalysis.recommendations
+            : [],
+        );
         setForm({
           businessName:
             value(business, "trade_name") || data.organization.name || "",
@@ -156,6 +174,18 @@ export function ProfileClient() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error ?? "No se pudo analizar.");
+      const profile = data.profile ?? {};
+      setForm((current) => ({
+        ...current,
+        businessName: profile.businessName || current.businessName,
+        legalName: profile.businessName || current.legalName,
+        rfc: profile.rfc || current.rfc,
+        taxRegime: profile.taxRegime || current.taxRegime,
+        fiscalZipCode: profile.fiscalZipCode || current.fiscalZipCode,
+      }));
+      setRecommendations(
+        Array.isArray(data.recommendations) ? data.recommendations : [],
+      );
       setMessage(data.message);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Error inesperado.");
@@ -197,8 +227,12 @@ export function ProfileClient() {
         </CardHeader>
         <CardContent>
           <label className="inline-flex cursor-pointer items-center rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted">
-            <Upload className="mr-2 h-4 w-4" />
-            {analyzing ? "Analizando..." : "Subir constancia"}
+            {analyzing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
+            {analyzing ? "Analizando..." : "Analizar constancia con IA"}
             <input
               type="file"
               accept=".pdf,application/pdf"
@@ -209,6 +243,46 @@ export function ProfileClient() {
           </label>
         </CardContent>
       </Card>
+
+      {recommendations.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recomendaciones fiscales</CardTitle>
+            <CardDescription>
+              Orientacion generada a partir de la constancia analizada.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {recommendations.map((recommendation, index) => (
+              <div
+                key={`${recommendation.title ?? "recomendacion"}-${index}`}
+                className="rounded-lg border p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="font-medium">
+                    {recommendation.title ?? "Recomendacion"}
+                  </h3>
+                  {recommendation.priority && (
+                    <span className="rounded-full border px-2 py-1 text-xs uppercase">
+                      {recommendation.priority}
+                    </span>
+                  )}
+                </div>
+                {recommendation.description && (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {recommendation.description}
+                  </p>
+                )}
+                {recommendation.requiresAccountant && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Se recomienda validar este punto con un contador.
+                  </p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <form onSubmit={saveProfile}>
         <Card>
