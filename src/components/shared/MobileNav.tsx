@@ -57,18 +57,14 @@ export function MobileNav() {
         <div className="px-4 py-4">
           {/* Workspace Switcher MOCK */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div
-                className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
-                    <Building2 className="h-3 w-3 text-primary-foreground" />
-                  </div>
-                  <span className="text-sm font-semibold truncate max-w-[120px]">{activeBusiness?.name || "Cargando..."}</span>
+            <DropdownMenuTrigger className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
+                  <Building2 className="h-3 w-3 text-primary-foreground" />
                 </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-semibold truncate max-w-[120px]">{activeBusiness?.name || "Cargando..."}</span>
               </div>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="start">
               <DropdownMenuLabel>Tus Negocios</DropdownMenuLabel>
