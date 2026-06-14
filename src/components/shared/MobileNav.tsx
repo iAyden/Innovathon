@@ -90,8 +90,8 @@ export function MobileNav() {
         <Separator />
         <nav className="space-y-1 px-3 py-4 flex-1">
           {dashboardNavItems.filter((item) => {
-            if (item.alwaysVisible) return true;
-            const moduleKey = item.href.replace("/", "");
+            if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules" || item.href === "/integrations") return true;
+            const moduleKey = item.moduleSlug || item.href.replace("/", "");
             return activeBusiness?.activeModules.includes(moduleKey as any);
           }).map((item) => {
             const fullHref = `/dashboard/${orgId}${item.href}`;
@@ -144,6 +144,36 @@ export function MobileNav() {
                   )}
                 >
                   Personalizar Pulso
+                </Link>
+                <Link
+                  href={`/dashboard/${orgId}/functions`}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                    pathname.startsWith(`/dashboard/${orgId}/functions`) && "bg-muted text-foreground font-medium"
+                  )}
+                >
+                  Funciones
+                </Link>
+                <Link
+                  href={`/dashboard/${orgId}/modules`}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                    pathname.startsWith(`/dashboard/${orgId}/modules`) && "bg-muted text-foreground font-medium"
+                  )}
+                >
+                  Módulos
+                </Link>
+                <Link
+                  href={`/dashboard/${orgId}/integrations`}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                    pathname.startsWith(`/dashboard/${orgId}/integrations`) && "bg-muted text-foreground font-medium"
+                  )}
+                >
+                  Integraciones
                 </Link>
               </div>
             )}
