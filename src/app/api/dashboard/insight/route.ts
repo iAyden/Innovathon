@@ -11,7 +11,7 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-export async function POST() {
+export async function GET() {
   try {
     const context = await requireOrganization();
     const admin = getSupabaseAdmin()!;
@@ -65,15 +65,13 @@ export async function POST() {
         topSupplierName: topSupplier?.name ?? null,
       },
     });
-    const insight = automation.ok ? automation.data : null;
 
     return NextResponse.json({
-      title: insight?.title ?? fallback.title,
-      message: insight?.message ?? fallback.message,
+      title: automation.data?.title ?? fallback.title,
+      message: automation.data?.message ?? fallback.message,
       recommendedAction:
-        insight?.recommendedAction ?? fallback.recommendedAction,
-      riskLevel: insight?.riskLevel ?? fallback.riskLevel,
-      source: insight ? "n8n" : "rules",
+        automation.data?.recommendedAction ?? fallback.recommendedAction,
+      riskLevel: automation.data?.riskLevel ?? fallback.riskLevel,
     });
   } catch (error) {
     return errorResponse(error);

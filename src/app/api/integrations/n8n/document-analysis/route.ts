@@ -44,17 +44,14 @@ export async function POST(request: Request) {
         },
       },
     });
-    const analysis = automation.ok ? (automation.data ?? {}) : {};
 
     if (document?.id) {
       await admin
         .from("business_documents")
         .update({
-          analysis_status: automation.ok ? "completed" : "failed",
-          extracted_data: analysis.extractedData ?? analysis,
-          recommendations: Array.isArray(analysis.recommendations)
-            ? analysis.recommendations
-            : [],
+          analysis_status: automation.ok ? "completed" : "processing",
+          extracted_data: automation.data?.extractedData ?? {},
+          recommendations: automation.data?.recommendations ?? [],
           updated_at: new Date().toISOString(),
         })
         .eq("id", document.id)
@@ -63,14 +60,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       configured: automation.configured,
-      success: Boolean(automation.ok),
       correlationId: automation.correlationId,
-      analysis,
-      message: automation.ok
-        ? "Documento analizado correctamente."
-        : automation.configured
-          ? "n8n no pudo analizar el documento."
-          : "Configura N8N_DOCUMENT_ANALYSIS_WEBHOOK_URL para activar el analisis.",
+      analysis: automation.data,
     });
   } catch (error) {
     return errorResponse(error);

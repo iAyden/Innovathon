@@ -14,13 +14,12 @@ import {
   requestInvoice,
   uploadInvoiceXml,
 } from "@/lib/fiscal-api";
-import { Loader2, Plus, Send, Upload } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 export function InvoicesClient() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [requestingId, setRequestingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [validationResult, setValidationResult] =
   useState<InvoiceUploadResult | null>(null);
@@ -96,19 +95,12 @@ export function InvoicesClient() {
 
   async function handleRequestInvoice(expenseId: string) {
     try {
-      setRequestingId(expenseId);
       setMessage(null);
-      const result = await requestInvoice(expenseId);
-      setMessage(
-        result.status === "sent"
-          ? "Solicitud de factura enviada al proveedor."
-          : "La solicitud quedo como borrador porque el workflow no pudo enviarla.",
-      );
+      await requestInvoice(expenseId);
+      setMessage("Solicitud de factura enviada al proveedor.");
       await loadExpenses();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Error inesperado.");
-    } finally {
-      setRequestingId(null);
     }
   }
 
@@ -338,17 +330,9 @@ export function InvoicesClient() {
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={requestingId === expense.id}
                           onClick={() => handleRequestInvoice(expense.id)}
                         >
-                          {requestingId === expense.id ? (
-                            <Loader2 className="animate-spin" />
-                          ) : (
-                            <Send />
-                          )}
-                          {requestingId === expense.id
-                            ? "Enviando..."
-                            : "Solicitar factura"}
+                          Solicitar factura
                         </Button>
                       )}
 

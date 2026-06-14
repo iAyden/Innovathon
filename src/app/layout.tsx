@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import "@fontsource-variable/fraunces/index.css";
 import "@fontsource-variable/inter/index.css";
 import "@fontsource/ibm-plex-mono/index.css";
 import "./globals.css";
 import { BusinessProvider } from "@/contexts/BusinessContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -22,7 +33,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="h-full antialiased">
+    <html
+      lang="es"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{

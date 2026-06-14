@@ -6,63 +6,6 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-function record(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function text(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function parseJson(value: unknown) {
-  if (typeof value !== "string") return value;
-
-  const source = value
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "");
-
-  try {
-    return JSON.parse(source);
-  } catch {
-    return value;
-  }
-}
-
-function normalizeAnalysis(value: unknown) {
-  const response = record(value);
-  const parsedOutput = record(parseJson(response.output));
-  const analysis = Object.keys(parsedOutput).length
-    ? parsedOutput
-    : response;
-  const extractedData = record(parseJson(analysis.extractedData));
-  const taxRegimes = Array.isArray(extractedData.taxRegimes)
-    ? extractedData.taxRegimes
-    : [];
-  const firstTaxRegime = record(taxRegimes[0]);
-  const parsedRecommendations = parseJson(analysis.recommendations);
-  const recommendations = Array.isArray(parsedRecommendations)
-    ? parsedRecommendations
-    : [];
-
-  return {
-    raw: analysis,
-    extractedData,
-    recommendations,
-    profile: {
-      businessName: text(extractedData.businessName),
-      rfc: text(extractedData.rfc).toUpperCase(),
-      taxRegime:
-        text(firstTaxRegime.code) ||
-        text(firstTaxRegime.name) ||
-        text(extractedData.taxRegime),
-      fiscalZipCode: text(extractedData.fiscalZipCode),
-    },
-  };
-}
-
 export async function POST(request: Request) {
   try {
     const context = await requireOrganization();
@@ -100,103 +43,27 @@ export async function POST(request: Request) {
           contentBase64: bytes.toString("base64"),
         },
       },
-      timeoutMs: 60000,
     });
-    const analysis = normalizeAnalysis(automation.data);
-    const analysisSucceeded = Boolean(automation.ok);
 
     if (document?.id) {
       await admin
         .from("business_documents")
         .update({
-          analysis_status: analysisSucceeded ? "completed" : "failed",
-          extracted_data: analysis.extractedData,
-          recommendations: analysis.recommendations,
+          analysis_status: automation.ok ? "completed" : "processing",
+          extracted_data: automation.data?.extractedData ?? {},
+          recommendations: automation.data?.recommendations ?? [],
           updated_at: new Date().toISOString(),
         })
         .eq("id", document.id)
         .eq("organization_id", context.organizationId);
     }
 
-    if (
-      analysisSucceeded &&
-      (analysis.profile.businessName || analysis.profile.rfc)
-    ) {
-      const { data: existingBusiness } = await admin
-        .from("business_profiles")
-        .select("organization_id")
-        .eq("organization_id", context.organizationId)
-        .maybeSingle();
-      const businessData = {
-        ...(analysis.profile.businessName
-          ? {
-              legal_name: analysis.profile.businessName,
-              trade_name: analysis.profile.businessName,
-            }
-          : {}),
-        ...(analysis.profile.rfc ? { rfc: analysis.profile.rfc } : {}),
-        updated_at: new Date().toISOString(),
-      };
-
-      if (existingBusiness) {
-        await admin
-          .from("business_profiles")
-          .update(businessData)
-          .eq("organization_id", context.organizationId);
-      } else {
-        await admin.from("business_profiles").insert({
-          organization_id: context.organizationId,
-          ...businessData,
-        });
-      }
-
-      if (analysis.profile.businessName) {
-        await admin
-          .from("organizations")
-          .update({ name: analysis.profile.businessName })
-          .eq("id", context.organizationId);
-      }
-
-      if (analysis.profile.businessName && analysis.profile.rfc) {
-        const { data: existingTax } = await admin
-          .from("tax_profiles")
-          .select("id")
-          .eq("organization_id", context.organizationId)
-          .maybeSingle();
-        const taxData = {
-          organization_id: context.organizationId,
-          business_name: analysis.profile.businessName,
-          rfc: analysis.profile.rfc,
-          ...(analysis.profile.taxRegime
-            ? { tax_regime: analysis.profile.taxRegime }
-            : {}),
-          ...(analysis.profile.fiscalZipCode
-            ? { fiscal_zip_code: analysis.profile.fiscalZipCode }
-            : {}),
-        };
-
-        if (existingTax) {
-          await admin.from("tax_profiles").update(taxData).eq("id", existingTax.id);
-        } else {
-          await admin.from("tax_profiles").insert({
-            ...taxData,
-            fiscal_email: context.email,
-          });
-        }
-      }
-    }
-
     return NextResponse.json({
       configured: automation.configured,
       correlationId: automation.correlationId,
-      analysis: analysis.raw,
-      profile: analysis.profile,
-      recommendations: analysis.recommendations,
-      profileUpdated: analysisSucceeded,
-      message: analysisSucceeded
-        ? "Constancia analizada. El perfil fiscal fue actualizado."
-        : automation.configured
-          ? "No se pudo completar el analisis de la constancia."
+      analysis: automation.data,
+      message: automation.configured
+        ? "La constancia fue enviada a analisis."
         : "El modulo esta listo; falta configurar N8N_FISCAL_PROFILE_WEBHOOK_URL.",
     });
   } catch (error) {

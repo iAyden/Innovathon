@@ -1,16 +1,12 @@
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Topbar } from "@/components/shared/Topbar";
-import { BusinessRouteSync } from "@/components/shared/BusinessRouteSync";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({
   children,
-  params,
 }: Readonly<{
   children: React.ReactNode;
-  params: Promise<{ orgId: string }>;
 }>) {
-  const { orgId } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -23,7 +19,6 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <BusinessRouteSync orgId={orgId} />
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar displayName={displayName} email={email} />

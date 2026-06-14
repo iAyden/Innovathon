@@ -11,11 +11,7 @@ export async function GET() {
   try {
     const context = await requireOrganization();
     const admin = getSupabaseAdmin()!;
-    const [
-      { data: businessProfile },
-      { data: taxProfile },
-      { data: fiscalAnalysis },
-    ] = await Promise.all([
+    const [{ data: businessProfile }, { data: taxProfile }] = await Promise.all([
       admin
         .from("business_profiles")
         .select("*")
@@ -26,15 +22,6 @@ export async function GET() {
         .select("*")
         .eq("organization_id", context.organizationId)
         .maybeSingle(),
-      admin
-        .from("business_documents")
-        .select("analysis_status, extracted_data, recommendations, updated_at")
-        .eq("organization_id", context.organizationId)
-        .eq("document_type", "tax-status-certificate")
-        .eq("analysis_status", "completed")
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
     ]);
 
     return NextResponse.json({
@@ -44,7 +31,6 @@ export async function GET() {
       },
       businessProfile: businessProfile ?? null,
       taxProfile: taxProfile ?? null,
-      fiscalAnalysis: fiscalAnalysis ?? null,
       user: { email: context.email, role: context.role },
     });
   } catch (error) {
