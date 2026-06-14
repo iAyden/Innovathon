@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useParams } from "next/navigation";
 import {
   Activity,
   Building2,
   FileText,
-  FolderOpen,
   LayoutDashboard,
   Sparkles,
-  Workflow,
   ChevronDown,
   Settings,
   Package,
   ShoppingCart,
   Truck,
+  CircleDollarSign,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,12 @@ export const dashboardNavItems: NavItem[] = [
   { title: "Proveedores", href: "/providers", icon: Truck, moduleSlug: "providers" },
   { title: "Inventario", href: "/inventory", icon: Package, moduleSlug: "inventory" },
   { title: "Pedidos", href: "/orders", icon: ShoppingCart, moduleSlug: "orders" },
+  {
+    title: "Cuentas por cobrar",
+    href: "/accounts-receivable",
+    icon: CircleDollarSign,
+    moduleSlug: "accounts-receivable",
+  },
 ];
 
 import { useState } from "react";
@@ -60,6 +66,20 @@ export function Sidebar() {
   return (
     <aside className="hidden h-full w-64 flex-col border-r border-border bg-card lg:flex">
       <div className="flex flex-col px-4 py-4 gap-4">
+        <Link
+          href={`/dashboard/${orgId}`}
+          className="flex h-20 items-center px-1"
+          aria-label="Ir al panel de Pulso AI"
+        >
+          <Image
+            src="/brand/pulso-logo-horizontal-v2.png"
+            alt="Pulso AI"
+            width={80}
+            height={50}
+            className="h-16 w-56 object-contain object-left"
+            priority
+          />
+        </Link>
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left">
             <div className="flex items-center gap-2.5">

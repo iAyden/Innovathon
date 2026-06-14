@@ -18,13 +18,16 @@ export const metadata: Metadata = {
 
 const descriptions: Record<string, string> = {
   "request-invoice": "Genera y envia solicitudes de factura a proveedores.",
-  "dashboard-insight": "Convierte indicadores mensuales en acciones prioritarias.",
+  "dashboard-insight":
+    "Analiza liquidez, cobranza, facturacion, inventario y operacion.",
   "fiscal-profile": "Analiza la Constancia de Situacion Fiscal.",
   "module-recommendation": "Recomienda modulos segun giro, retos y metas.",
   "cashflow-forecast": "Produce escenarios de liquidez a 30, 60 y 90 dias.",
   "document-analysis": "Extrae informacion de tickets y documentos operativos.",
   "supplier-analysis":
     "Interpreta cumplimiento, facturacion y respuesta de cada proveedor.",
+  "collections-advisor":
+    "Prioriza saldos pendientes, vencimientos y acciones de cobranza.",
 };
 
 const workflowRoutes: Record<string, string> = {
@@ -35,6 +38,7 @@ const workflowRoutes: Record<string, string> = {
   "cashflow-forecast": "/cash-flow",
   "document-analysis": "/orders?view=documents",
   "supplier-analysis": "/providers",
+  "collections-advisor": "/accounts-receivable",
 };
 
 export default async function IntegrationsPage({

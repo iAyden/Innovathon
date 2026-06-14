@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   description:
     "Organizacion financiera, operativa y fiscal accesible para microempresas mexicanas.",
   keywords: ["microempresas", "finanzas", "facturas", "SAT", "Mexico", "IA"],
+  icons: {
+    icon: "/brand/pulso-icon.png",
+    shortcut: "/brand/pulso-icon.png",
+    apple: "/brand/pulso-icon.png",
+  },
 };
 
 export default function RootLayout({

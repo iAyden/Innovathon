@@ -10,7 +10,8 @@ export type N8nWorkflow =
   | "module-recommendation"
   | "cashflow-forecast"
   | "document-analysis"
-  | "supplier-analysis";
+  | "supplier-analysis"
+  | "collections-advisor";
 
 const ENV_BY_WORKFLOW: Record<N8nWorkflow, string> = {
   "request-invoice": "N8N_REQUEST_INVOICE_WEBHOOK_URL",
@@ -20,6 +21,7 @@ const ENV_BY_WORKFLOW: Record<N8nWorkflow, string> = {
   "cashflow-forecast": "N8N_CASHFLOW_FORECAST_WEBHOOK_URL",
   "document-analysis": "N8N_DOCUMENT_ANALYSIS_WEBHOOK_URL",
   "supplier-analysis": "N8N_SUPPLIER_ANALYSIS_WEBHOOK_URL",
+  "collections-advisor": "N8N_COLLECTIONS_ADVISOR_WEBHOOK_URL",
 };
 
 function parseJsonString(value: unknown): unknown {

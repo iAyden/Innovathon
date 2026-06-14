@@ -1,7 +1,7 @@
 "use client";
 
+import Image from "next/image";
 import { useBusiness } from "@/contexts/BusinessContext";
-import { Topbar } from "@/components/shared/Topbar";
 import { Building2, Plus, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -15,12 +15,17 @@ export default function GlobalHubPage() {
     <div className="flex h-screen overflow-hidden bg-muted/20">
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Simple Topbar for Global Hub */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
+        <header className="flex h-20 shrink-0 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Building2 className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold tracking-tight">Pulso AI Hub</span>
+            <Image
+              src="/brand/pulso-logo-horizontal-v2.png"
+              alt="Pulso AI"
+              width={80}
+              height={50}
+              className="h-16 w-56 object-contain"
+              priority
+            />
+            <span className="text-sm font-medium text-muted-foreground">Hub</span>
           </div>
         </header>
 

@@ -7,6 +7,7 @@ import {
 } from "@/lib/document-analysis";
 import { requireOrganization } from "@/lib/server/auth";
 import { errorResponse, HttpError } from "@/lib/server/http";
+import { syncDocumentInventory } from "@/lib/server/inventory-sync";
 import { triggerN8n } from "@/lib/server/n8n";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
@@ -75,18 +76,32 @@ export async function POST(request: Request) {
       !Array.isArray(analysis.extractedData)
         ? analysis.extractedData
         : analysis
-    ) as any;
+    ) as Record<string, unknown>;
     const detectedDocumentType =
       "documentType" in extractedData &&
       typeof extractedData.documentType === "string"
         ? extractedData.documentType
         : "operational-document";
+    let inventorySync = {};
+    if (
+      analysisSucceeded &&
+      normalizedAnalysis &&
+      (!normalizedAnalysis.extractedData.reviewRequired ||
+        normalizedAnalysis.extractedData.reviewed)
+    ) {
+      inventorySync = await syncDocumentInventory(
+        admin,
+        context.organizationId,
+        normalizedAnalysis.extractedData,
+      );
+    }
+    const storedExtractedData = { ...extractedData, ...inventorySync };
     const { error: updateError } = await admin
       .from("business_documents")
       .update({
         document_type: detectedDocumentType,
         analysis_status: analysisSucceeded ? "completed" : "failed",
-        extracted_data: extractedData,
+        extracted_data: storedExtractedData,
         recommendations: Array.isArray(analysis.recommendations)
           ? analysis.recommendations
           : [],
@@ -102,53 +117,17 @@ export async function POST(request: Request) {
       );
     }
 
-    if (analysisSucceeded && Array.isArray(extractedData.items) && extractedData.items.length > 0) {
-      // Upsert into inventory_items
-      for (const item of extractedData.items) {
-        if (!item.name || typeof item.quantity !== "number") continue;
-
-        const quantity = Number(item.quantity);
-        const unitPrice = Number(item.unitPrice || 0);
-        const articleId = item.articleId || null;
-
-        // Try to fetch existing
-        const { data: existingItem } = await admin
-          .from("inventory_items")
-          .select("id, stock")
-          .eq("organization_id", context.organizationId)
-          .ilike("name", item.name)
-          .maybeSingle();
-
-        if (existingItem) {
-          await admin
-            .from("inventory_items")
-            .update({
-              stock: Number(existingItem.stock) + quantity,
-              unit_price: unitPrice,
-              article_id: articleId || undefined,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", existingItem.id);
-        } else {
-          await admin
-            .from("inventory_items")
-            .insert({
-              organization_id: context.organizationId,
-              name: item.name,
-              article_id: articleId,
-              stock: quantity,
-              unit_price: unitPrice,
-            });
-        }
-      }
-    }
-
     return NextResponse.json({
       documentId: document.id,
       configured: automation.configured,
       success: analysisSucceeded,
       correlationId: automation.correlationId,
-      analysis,
+      analysis: normalizedAnalysis
+        ? {
+            ...normalizedAnalysis,
+            extractedData: storedExtractedData,
+          }
+        : analysis,
       message: analysisSucceeded
         ? normalizedAnalysis?.extractedData.reviewRequired &&
           !normalizedAnalysis.extractedData.reviewed

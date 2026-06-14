@@ -52,6 +52,8 @@ export type ExtractedDocumentData = {
   reviewReasons?: string[];
   registeredAsExpense?: boolean;
   cashFlowEntryId?: string;
+  inventorySyncedAt?: string;
+  inventoryItemIds?: string[];
 };
 
 export type DocumentAnalysis = {

@@ -45,7 +45,7 @@ export const MODULE_CATALOG: BusinessModule[] = [
     description: "Organiza existencias, compras y alertas de reposicion.",
     category: "Operacion",
     type: "function",
-    workflow: "inventory-advisor",
+    workflow: "inventory-manager",
     recommendedFor: ["commerce", "manufacturing", "food"],
   },
   {

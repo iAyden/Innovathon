@@ -1,10 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   Blocks,
   FileSearch,
   LineChart,
-  WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,12 +32,16 @@ const features = [
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background/85 px-4 backdrop-blur-md md:px-8">
+      <header className="sticky top-0 z-50 flex h-20 items-center justify-between border-b bg-background/85 px-4 backdrop-blur-md md:px-8">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <WalletCards className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold tracking-tight">Pulso AI</span>
+          <Image
+            src="/brand/pulso-logo-horizontal-v2.png"
+            alt="Pulso AI"
+            width={80}
+            height={50}
+            className="h-16 w-56 object-contain"
+            priority
+          />
         </Link>
         <nav className="flex items-center gap-4">
           <Link href="/login" className="text-sm font-medium">
@@ -54,6 +58,14 @@ export default function LandingPage() {
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
           <div className="container mx-auto px-4 text-center md:px-6">
             <div className="mx-auto max-w-4xl">
+              <Image
+                src="/brand/pulso-logo-central.png"
+                alt="Pulso AI"
+                width={280}
+                height={280}
+                className="mx-auto mb-8 h-64 w-64 object-contain sm:h-100 sm:w-100"
+                priority
+              />
               <p className="mb-5 text-sm font-medium text-muted-foreground">
                 Organizacion accesible para microempresas mexicanas
               </p>
