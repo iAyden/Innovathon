@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Bot, Loader2, Plus } from "lucide-react";
+import { Bot, CheckCircle2, Loader2, Plus, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,13 +24,56 @@ type CashEntry = {
   occurred_on: string;
 };
 
+type ForecastScenario = {
+  days: number;
+  projectedIncome: number;
+  projectedExpenses: number;
+  projectedBalance: number;
+  riskLevel: "low" | "medium" | "high";
+};
+
+type CashFlowForecast = {
+  currency: "MXN" | "USD";
+  currentEstimatedBalance: number;
+  scenarios: ForecastScenario[];
+  summary: string;
+  recommendations: string[];
+};
+
+function isCashFlowForecast(value: unknown): value is CashFlowForecast {
+  if (!value || typeof value !== "object") return false;
+
+  const forecast = value as Record<string, unknown>;
+  return (
+    (forecast.currency === "MXN" || forecast.currency === "USD") &&
+    typeof forecast.currentEstimatedBalance === "number" &&
+    Array.isArray(forecast.scenarios) &&
+    forecast.scenarios.every((scenario) => {
+      if (!scenario || typeof scenario !== "object") return false;
+      const item = scenario as Record<string, unknown>;
+      return (
+        typeof item.days === "number" &&
+        typeof item.projectedIncome === "number" &&
+        typeof item.projectedExpenses === "number" &&
+        typeof item.projectedBalance === "number" &&
+        ["low", "medium", "high"].includes(String(item.riskLevel))
+      );
+    }) &&
+    typeof forecast.summary === "string" &&
+    Array.isArray(forecast.recommendations) &&
+    forecast.recommendations.every(
+      (recommendation) => typeof recommendation === "string",
+    )
+  );
+}
+
 export function CashFlowClient() {
   const [entries, setEntries] = useState<CashEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [forecasting, setForecasting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [forecast, setForecast] = useState<unknown>(null);
+  const [forecast, setForecast] = useState<CashFlowForecast | null>(null);
   const [form, setForm] = useState({
     entryType: "income",
     amount: "",
@@ -97,6 +141,9 @@ export function CashFlowClient() {
       const response = await fetch("/api/cash-flow/forecast", { method: "POST" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error ?? "No se pudo pronosticar.");
+      if (!isCashFlowForecast(data.forecast)) {
+        throw new Error("El pronostico recibido no tiene el formato esperado.");
+      }
       setForecast(data.forecast);
       setMessage(data.message);
     } catch (error) {
@@ -146,13 +193,60 @@ export function CashFlowClient() {
       {forecast !== null && (
         <Card>
           <CardHeader>
-            <CardTitle>Pronostico recibido</CardTitle>
-            <CardDescription>Respuesta estructurada del workflow de n8n.</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Pronostico de liquidez
+            </CardTitle>
+            <CardDescription>
+              Proyeccion estimada con base en tus movimientos registrados.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <pre className="overflow-x-auto rounded-lg bg-muted p-4 text-xs">
-              {JSON.stringify(forecast, null, 2)}
-            </pre>
+          <CardContent className="space-y-5">
+            <div className="rounded-lg border bg-muted/40 p-4">
+              <p className="text-sm text-muted-foreground">
+                Balance estimado actual
+              </p>
+              <p className="mt-1 text-2xl font-bold">
+                {formatCurrency(
+                  forecast.currentEstimatedBalance,
+                  forecast.currency,
+                )}
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              {forecast.scenarios.map((scenario) => (
+                <ForecastCard
+                  key={scenario.days}
+                  scenario={scenario}
+                  currency={forecast.currency}
+                />
+              ))}
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <h3 className="font-semibold">Resumen</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {forecast.summary}
+              </p>
+            </div>
+
+            {forecast.recommendations.length > 0 && (
+              <div>
+                <h3 className="font-semibold">Acciones recomendadas</h3>
+                <div className="mt-3 space-y-2">
+                  {forecast.recommendations.map((recommendation) => (
+                    <div
+                      key={recommendation}
+                      className="flex gap-3 rounded-lg border p-3 text-sm"
+                    >
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      <span>{recommendation}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -215,6 +309,43 @@ export function CashFlowClient() {
             )}
           </CardContent>
         </Card>
+      </div>
+    </div>
+  );
+}
+
+function ForecastCard({
+  scenario,
+  currency,
+}: {
+  scenario: ForecastScenario;
+  currency: "MXN" | "USD";
+}) {
+  const risk = {
+    low: { label: "Riesgo bajo", variant: "default" as const },
+    medium: { label: "Riesgo medio", variant: "outline" as const },
+    high: { label: "Riesgo alto", variant: "destructive" as const },
+  }[scenario.riskLevel];
+
+  return (
+    <div className="rounded-xl border p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-semibold">{scenario.days} dias</h3>
+        <Badge variant={risk.variant}>{risk.label}</Badge>
+      </div>
+      <p className="mt-4 text-xs text-muted-foreground">Balance proyectado</p>
+      <p className="mt-1 text-xl font-bold">
+        {formatCurrency(scenario.projectedBalance, currency)}
+      </p>
+      <div className="mt-4 space-y-2 border-t pt-3 text-sm">
+        <div className="flex justify-between gap-3">
+          <span className="text-muted-foreground">Entradas</span>
+          <span>{formatCurrency(scenario.projectedIncome, currency)}</span>
+        </div>
+        <div className="flex justify-between gap-3">
+          <span className="text-muted-foreground">Salidas</span>
+          <span>{formatCurrency(scenario.projectedExpenses, currency)}</span>
+        </div>
       </div>
     </div>
   );
