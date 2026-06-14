@@ -43,6 +43,7 @@ export async function POST(request: Request) {
           contentBase64: content,
         },
       },
+      timeoutMs: 60000,
     });
     const analysis = automation.ok ? (automation.data ?? {}) : {};
 
