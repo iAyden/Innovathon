@@ -66,12 +66,13 @@ export async function POST(request: Request) {
     const analysis = normalizedAnalysis ?? rawAnalysis;
     const analysisSucceeded = Boolean(automation.ok && validAnalysis);
 
-    const extractedData =
+    const extractedData = (
       analysis.extractedData &&
       typeof analysis.extractedData === "object" &&
       !Array.isArray(analysis.extractedData)
         ? analysis.extractedData
-        : analysis;
+        : analysis
+    ) as any;
     const detectedDocumentType =
       "documentType" in extractedData &&
       typeof extractedData.documentType === "string"
@@ -96,6 +97,47 @@ export async function POST(request: Request) {
         "El documento fue analizado, pero no se pudo guardar el resultado.",
         500,
       );
+    }
+
+    if (analysisSucceeded && Array.isArray(extractedData.items) && extractedData.items.length > 0) {
+      // Upsert into inventory_items
+      for (const item of extractedData.items) {
+        if (!item.name || typeof item.quantity !== "number") continue;
+
+        const quantity = Number(item.quantity);
+        const unitPrice = Number(item.unitPrice || 0);
+        const articleId = item.articleId || null;
+
+        // Try to fetch existing
+        const { data: existingItem } = await admin
+          .from("inventory_items")
+          .select("id, stock")
+          .eq("organization_id", context.organizationId)
+          .ilike("name", item.name)
+          .maybeSingle();
+
+        if (existingItem) {
+          await admin
+            .from("inventory_items")
+            .update({
+              stock: Number(existingItem.stock) + quantity,
+              unit_price: unitPrice,
+              article_id: articleId || undefined,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existingItem.id);
+        } else {
+          await admin
+            .from("inventory_items")
+            .insert({
+              organization_id: context.organizationId,
+              name: item.name,
+              article_id: articleId,
+              stock: quantity,
+              unit_price: unitPrice,
+            });
+        }
+      }
     }
 
     return NextResponse.json({
