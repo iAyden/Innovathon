@@ -246,7 +246,31 @@ export type Supplier = {
   whatsapp?: string | null;
   complianceScore?: number | null;
   avgResponseDays?: number | null;
+  metrics: SupplierMetrics;
   createdAt: string;
+};
+
+export type SupplierMetrics = {
+  purchaseCount: number;
+  totalSpend: number;
+  pendingInvoiceCount: number;
+  receivedInvoiceCount: number;
+  requestCount: number;
+  responseCount: number;
+  invoiceCoverageRate: number;
+  avgResponseDays: number | null;
+  complianceScore: number | null;
+  hasActivity: boolean;
+};
+
+export type SupplierPortfolioAnalysis = {
+  summary: string;
+  observations: string[];
+  pendingActions: string[];
+  recommendations: string[];
+  riskLevel: "low" | "medium" | "high";
+  generatedAt: string;
+  source: "n8n" | "rules";
 };
 
 export async function getSuppliers(): Promise<Supplier[]> {
@@ -278,6 +302,62 @@ export async function createSupplier(input: {
   if (!response.ok) {
     const error = await response.json().catch(() => null);
     throw new Error(error?.error ?? "No se pudo crear el proveedor.");
+  }
+
+  return response.json();
+}
+
+export async function updateSupplier(
+  id: string,
+  input: {
+    name: string;
+    email?: string;
+    rfc?: string;
+    whatsapp?: string;
+  },
+) {
+  const response = await fetch(`/api/suppliers/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.error ?? "No se pudo actualizar el proveedor.");
+  }
+
+  return response.json();
+}
+
+export async function getSupplierPortfolioAnalysis(): Promise<SupplierPortfolioAnalysis | null> {
+  const response = await fetch("/api/suppliers/analyze", {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("No se pudo cargar el análisis de proveedores.");
+  }
+
+  const data = await response.json();
+  return data.analysis ?? null;
+}
+
+export async function analyzeSupplierPortfolio(): Promise<{
+  analysis: SupplierPortfolioAnalysis;
+  automationConfigured: boolean;
+  automationSucceeded: boolean;
+}> {
+  const response = await fetch("/api/suppliers/analyze", {
+    method: "POST",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.error ?? "No se pudieron analizar los proveedores.");
   }
 
   return response.json();

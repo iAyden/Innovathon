@@ -50,7 +50,11 @@ const TYPE_LABELS: Record<DocumentFilter, string> = {
   other: "Otros",
 };
 
-export function DocumentsClient() {
+type DocumentsClientProps = {
+  embedded?: boolean;
+};
+
+export function DocumentsClient({ embedded = false }: DocumentsClientProps) {
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [workingId, setWorkingId] = useState<string | null>(null);
@@ -152,15 +156,21 @@ export function DocumentsClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Documentos analizados
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Revisa, clasifica y convierte tickets confirmados en salidas.
-          </p>
-        </div>
+      <div
+        className={`flex flex-col gap-4 sm:flex-row sm:items-center ${
+          embedded ? "sm:justify-end" : "sm:justify-between"
+        }`}
+      >
+        {!embedded && (
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Documentos analizados
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Revisa, clasifica y convierte tickets confirmados en salidas.
+            </p>
+          </div>
+        )}
         <Button
           variant="outline"
           onClick={() => loadDocuments().catch((error) => setMessage(error.message))}

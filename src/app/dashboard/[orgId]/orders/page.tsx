@@ -6,6 +6,14 @@ export const metadata: Metadata = {
   description: "Sube y procesa tus comprobantes de pedidos.",
 };
 
-export default function OrdersPage() {
-  return <OrdersClient />;
+export default async function OrdersPage({
+  searchParams,
+}: PageProps<"/dashboard/[orgId]/orders">) {
+  const { view } = await searchParams;
+
+  return (
+    <OrdersClient
+      initialView={view === "documents" ? "documents" : "upload"}
+    />
+  );
 }

@@ -125,7 +125,9 @@ export function Topbar({
               notifications.slice(0, 5).map((notification) => (
                 <DropdownMenuItem
                   key={notification.id}
-                  render={<Link href={`${dashboardBase}/documents`} />}
+                  render={
+                    <Link href={`${dashboardBase}/orders?view=documents`} />
+                  }
                   className="items-start py-3"
                 >
                   <div>
@@ -141,7 +143,9 @@ export function Topbar({
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  render={<Link href={`${dashboardBase}/documents`} />}
+                  render={
+                    <Link href={`${dashboardBase}/orders?view=documents`} />
+                  }
                 >
                   Ver documentos en revisión
                 </DropdownMenuItem>
