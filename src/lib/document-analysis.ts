@@ -13,6 +13,7 @@ export type ExtractedDocumentData = {
   paymentMethod: string;
   category: string;
   description: string;
+  items?: { name: string; quantity: number; unitPrice: number; articleId?: string }[];
   confidence: number;
   warnings: string[];
   subtotalInferred?: boolean;
