@@ -119,7 +119,7 @@ export function DashboardClient() {
             </span>
           </div>
           <div className="mt-4 rounded-lg border bg-muted/40 p-3 text-sm">
-            <span className="font-medium">Accion recomendada: </span>
+            <span className="font-medium">Acción recomendada: </span>
             {insight.recommendedAction}
           </div>
           <Button
@@ -163,8 +163,13 @@ export function DashboardClient() {
         <div className="lg:col-span-3">
           <CashFlowChart data={summary?.cashFlow ?? []} />
         </div>
-        <div className="lg:col-span-2">
-          <UploadTicket />
+
+        {/* Derecha: Métricas Financieras */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold tracking-tight mb-2">Métricas Financieras</h2>
+          {kpis.map((kpi) => (
+            <KpiCard key={kpi.title} {...kpi} />
+          ))}
         </div>
       </div>
     </div>

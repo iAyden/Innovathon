@@ -18,12 +18,24 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { dashboardNavItems } from "./Sidebar";
 
+import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sparkles } from "lucide-react";
+
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const params = useParams();
   const orgId = params.orgId as string;
-  const { activeBusiness } = useBusiness();
+  const { activeBusiness, businesses } = useBusiness();
+  const router = useRouter();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
