@@ -36,7 +36,8 @@ export function Topbar({
       id: string;
       title: string;
       message: string;
-      fileName: string;
+      context?: string;
+      href?: string;
     }[]
   >([]);
 
@@ -119,21 +120,26 @@ export function Topbar({
             <DropdownMenuSeparator />
             {notifications.length === 0 ? (
               <DropdownMenuItem disabled>
-                No hay documentos pendientes.
+                No hay pendientes.
               </DropdownMenuItem>
             ) : (
               notifications.slice(0, 5).map((notification) => (
                 <DropdownMenuItem
                   key={notification.id}
                   render={
-                    <Link href={`${dashboardBase}/orders?view=documents`} />
+                    <Link
+                      href={`${dashboardBase}${notification.href ?? "/orders?view=documents"}`}
+                    />
                   }
                   className="items-start py-3"
                 >
                   <div>
                     <p className="text-sm font-medium">{notification.title}</p>
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                      {notification.fileName}: {notification.message}
+                      {notification.context
+                        ? `${notification.context}: `
+                        : ""}
+                      {notification.message}
                     </p>
                   </div>
                 </DropdownMenuItem>
@@ -144,10 +150,12 @@ export function Topbar({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   render={
-                    <Link href={`${dashboardBase}/orders?view=documents`} />
+                    <Link
+                      href={`${dashboardBase}${notifications[0]?.href ?? "/orders?view=documents"}`}
+                    />
                   }
                 >
-                  Ver documentos en revisión
+                  Abrir pendientes
                 </DropdownMenuItem>
               </>
             )}

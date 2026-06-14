@@ -25,6 +25,8 @@ const descriptions: Record<string, string> = {
   "document-analysis": "Extrae informacion de tickets y documentos operativos.",
   "supplier-analysis":
     "Interpreta cumplimiento, facturacion y respuesta de cada proveedor.",
+  "collections-advisor":
+    "Prioriza saldos pendientes, vencimientos y acciones de cobranza.",
 };
 
 const workflowRoutes: Record<string, string> = {
@@ -35,6 +37,7 @@ const workflowRoutes: Record<string, string> = {
   "cashflow-forecast": "/cash-flow",
   "document-analysis": "/orders?view=documents",
   "supplier-analysis": "/providers",
+  "collections-advisor": "/accounts-receivable",
 };
 
 export default async function IntegrationsPage({

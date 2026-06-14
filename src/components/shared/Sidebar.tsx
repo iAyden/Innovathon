@@ -15,6 +15,7 @@ import {
   Package,
   ShoppingCart,
   Truck,
+  CircleDollarSign,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,12 @@ export const dashboardNavItems: NavItem[] = [
   { title: "Proveedores", href: "/providers", icon: Truck, moduleSlug: "providers" },
   { title: "Inventario", href: "/inventory", icon: Package, moduleSlug: "inventory" },
   { title: "Pedidos", href: "/orders", icon: ShoppingCart, moduleSlug: "orders" },
+  {
+    title: "Cuentas por cobrar",
+    href: "/accounts-receivable",
+    icon: CircleDollarSign,
+    moduleSlug: "accounts-receivable",
+  },
 ];
 
 import { useState } from "react";

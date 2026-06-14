@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-export type ModuleType = "inventory" | "sales" | "orders" | "invoices" | "providers" | "cash-flow" | "integrations" | "reports" | "settings";
+export type ModuleType = "inventory" | "sales" | "orders" | "invoices" | "providers" | "cash-flow" | "accounts-receivable" | "integrations" | "reports" | "settings";
 
 export interface Business {
   id: string;

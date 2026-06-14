@@ -21,6 +21,7 @@ Antes de usar perfil operativo, modulos, flujo de caja o integraciones, aplica:
 
 ```text
 supabase/migrations/202606130001_pulso_ai_core.sql
+supabase/migrations/202606140001_accounts_receivable.sql
 ```
 
 La migracion agrega:
@@ -31,7 +32,13 @@ La migracion agrega:
 - `cash_flow_entries`
 - `business_documents`
 - `integration_events`
+- `customers`
+- `accounts_receivable`
+- `receivable_payments`
 - politicas RLS por membresia de organizacion
+
+Los pagos de cuentas por cobrar generan automaticamente una entrada en
+`cash_flow_entries`.
 
 ## n8n
 
