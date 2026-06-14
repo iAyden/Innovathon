@@ -6,6 +6,7 @@ import {
   Activity,
   Building2,
   FileText,
+  FolderOpen,
   LayoutDashboard,
   Sparkles,
   Workflow,
