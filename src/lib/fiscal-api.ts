@@ -237,3 +237,48 @@ export function buildValidationTitle(result: InvoiceUploadResult) {
 
   return "El XML requiere revisión";
 }
+
+export type Supplier = {
+  id: string;
+  name: string;
+  rfc?: string | null;
+  email?: string | null;
+  whatsapp?: string | null;
+  complianceScore?: number | null;
+  avgResponseDays?: number | null;
+  createdAt: string;
+};
+
+export async function getSuppliers(): Promise<Supplier[]> {
+  const response = await fetch("/api/suppliers", {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("No se pudieron cargar los proveedores.");
+  }
+
+  return response.json();
+}
+
+export async function createSupplier(input: {
+  name: string;
+  email?: string;
+  rfc?: string;
+  whatsapp?: string;
+}) {
+  const response = await fetch("/api/suppliers", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.error ?? "No se pudo crear el proveedor.");
+  }
+
+  return response.json();
+}
