@@ -28,13 +28,20 @@ function formatCurrency(value: number) {
 }
 
 function monthLabel(value: string) {
-  const date = new Date(`${value}-01T12:00:00`);
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat("es-MX", { month: "short" }).format(date);
+  // If it's just YYYY-MM
+  if (/^\d{4}-\d{2}$/.test(value)) {
+    const date = new Date(`${value}-01T12:00:00`);
+    return new Intl.DateTimeFormat("es-MX", { month: "short" }).format(date);
+  }
+  // If it's YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const date = new Date(`${value}T12:00:00`);
+    return new Intl.DateTimeFormat("es-MX", { month: "short", day: "numeric" }).format(date);
+  }
+  return value;
 }
 
-export function CashFlowChart({ data }: { data: CashFlowEntry[] }) {
+export function CashFlowChart({ data, action }: { data: CashFlowEntry[], action?: React.ReactNode }) {
   const chartData = data.map((entry) => ({
     ...entry,
     month: monthLabel(entry.month),
@@ -42,11 +49,14 @@ export function CashFlowChart({ data }: { data: CashFlowEntry[] }) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Flujo de caja</CardTitle>
-        <CardDescription>
-          Entradas y salidas registradas en los ultimos 6 meses.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="space-y-1">
+          <CardTitle>Flujo de caja</CardTitle>
+          <CardDescription>
+            Entradas y salidas registradas.
+          </CardDescription>
+        </div>
+        {action && <div>{action}</div>}
       </CardHeader>
       <CardContent>
         <div className="h-[300px] sm:h-[350px]">

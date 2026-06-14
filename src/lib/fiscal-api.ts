@@ -33,8 +33,11 @@ export type Expense = {
   createdAt: string;
 };
 
-export async function getDashboardSummary(): Promise<DashboardSummary> {
-  const response = await fetch("/api/dashboard/summary", {
+export async function getDashboardSummary(range?: string): Promise<DashboardSummary> {
+  const params = new URLSearchParams();
+  if (range) params.append("range", range);
+  
+  const response = await fetch(`/api/dashboard/summary?${params.toString()}`, {
     cache: "no-store",
   });
 

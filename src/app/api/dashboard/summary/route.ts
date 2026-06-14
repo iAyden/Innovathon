@@ -10,19 +10,34 @@ const RISKY_STATUSES = [
   "expired",
 ];
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const context = await requireOrganization();
     const admin = getSupabaseAdmin();
+    const { searchParams } = new URL(request.url);
+    const range = searchParams.get("range") || "6m"; // 7d, 30d, 6m
 
     if (!admin) {
       throw new Error("Supabase no esta configurado.");
     }
 
+    // Determine the date limit
+    const now = new Date();
+    let startDate = new Date();
+    if (range === "7d") {
+      startDate.setDate(now.getDate() - 7);
+    } else if (range === "30d") {
+      startDate.setDate(now.getDate() - 30);
+    } else {
+      startDate.setMonth(now.getMonth() - 6);
+    }
+    const startDateStr = startDate.toISOString().split("T")[0];
+
     const { data, error } = await admin
       .from("expenses")
       .select("amount, iva_amount, status, expense_date")
       .eq("organization_id", context.organizationId)
+      .gte("expense_date", startDateStr)
       .order("expense_date", { ascending: true });
 
     if (error) {
@@ -37,20 +52,45 @@ export async function GET() {
     const pending = monthlyRows.filter((row) =>
       RISKY_STATUSES.includes(row.status),
     );
-    const monthMap = new Map<string, number>();
+    
+    // Group cash flow
+    const isDaily = range === "7d" || range === "30d";
+    const dateMap = new Map<string, number>();
+
+    // Initialize all dates in range with 0
+    let iterDate = new Date(startDate);
+    while (iterDate <= now) {
+      if (isDaily) {
+        const d = iterDate.toISOString().split("T")[0];
+        dateMap.set(d, 0);
+        iterDate.setDate(iterDate.getDate() + 1);
+      } else {
+        const m = iterDate.toISOString().slice(0, 7);
+        if (!dateMap.has(m)) dateMap.set(m, 0);
+        iterDate.setMonth(iterDate.getMonth() + 1);
+      }
+    }
 
     rows.forEach((row) => {
-      const month = String(row.expense_date).slice(0, 7);
-      monthMap.set(month, (monthMap.get(month) ?? 0) + Number(row.amount ?? 0));
+      const key = isDaily 
+        ? String(row.expense_date).split("T")[0]
+        : String(row.expense_date).slice(0, 7);
+      
+      if (dateMap.has(key)) {
+        dateMap.set(key, (dateMap.get(key) ?? 0) + Number(row.amount ?? 0));
+      } else {
+        dateMap.set(key, Number(row.amount ?? 0));
+      }
     });
 
-    const cashFlow = Array.from(monthMap.entries())
-      .slice(-6)
-      .map(([month, expenses]) => ({
-        month,
-        income: 0,
-        expenses,
-      }));
+    // Ensure sorted correctly
+    const sortedKeys = Array.from(dateMap.keys()).sort();
+    
+    const cashFlow = sortedKeys.map((dateKey) => ({
+      month: dateKey, // keeping 'month' property name for frontend compatibility
+      income: 0,
+      expenses: dateMap.get(dateKey) ?? 0,
+    }));
 
     return NextResponse.json({
       monthlyExpenses: monthlyRows.reduce(

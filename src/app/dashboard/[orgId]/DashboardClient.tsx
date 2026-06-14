@@ -26,10 +26,12 @@ export function DashboardClient() {
   const [insight, setInsight] = useState<DashboardInsight | null>(null);
   const [generatingInsight, setGeneratingInsight] = useState(false);
   const [insightError, setInsightError] = useState<string | null>(null);
+  const [range, setRange] = useState("6m");
 
   useEffect(() => {
     let active = true;
-    getDashboardSummary()
+    setLoading(true);
+    getDashboardSummary(range)
       .then((summaryData) => {
         if (!active) return;
         setSummary(summaryData);
@@ -39,7 +41,7 @@ export function DashboardClient() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [range]);
 
   async function generateInsight() {
     setGeneratingInsight(true);
@@ -157,8 +159,43 @@ export function DashboardClient() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <CashFlowChart data={summary?.cashFlow ?? []} />
+        <div className="lg:col-span-2 relative">
+          {loading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/50 backdrop-blur-sm">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          <CashFlowChart 
+            data={summary?.cashFlow ?? []} 
+            action={
+              <div className="flex items-center gap-1 rounded-md border p-1 bg-muted/20">
+                <Button 
+                  variant={range === "7d" ? "default" : "ghost"} 
+                  size="sm" 
+                  className="h-7 text-xs px-2"
+                  onClick={() => setRange("7d")}
+                >
+                  7D
+                </Button>
+                <Button 
+                  variant={range === "30d" ? "default" : "ghost"} 
+                  size="sm" 
+                  className="h-7 text-xs px-2"
+                  onClick={() => setRange("30d")}
+                >
+                  30D
+                </Button>
+                <Button 
+                  variant={range === "6m" ? "default" : "ghost"} 
+                  size="sm" 
+                  className="h-7 text-xs px-2"
+                  onClick={() => setRange("6m")}
+                >
+                  6M
+                </Button>
+              </div>
+            }
+          />
         </div>
 
         {/* Derecha: Métricas Financieras */}
