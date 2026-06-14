@@ -7,6 +7,7 @@ import {
   Blocks,
   Building2,
   FileText,
+  FolderOpen,
   LayoutDashboard,
   Sparkles,
   Workflow,
@@ -24,15 +25,23 @@ type NavItem = {
   title: string;
   href: string;
   icon: LucideIcon;
+  alwaysVisible?: boolean;
 };
 
 // Rutas relativas, el orgId se antepondrá dinámicamente
 export const dashboardNavItems: NavItem[] = [
-  { title: "Inicio", href: "", icon: LayoutDashboard },
-  { title: "Perfil", href: "/profile", icon: Building2 },
-  { title: "Modulos", href: "/modules", icon: Blocks },
+  { title: "Inicio", href: "", icon: LayoutDashboard, alwaysVisible: true },
+  { title: "Perfil", href: "/profile", icon: Building2, alwaysVisible: true },
+  { title: "Personalizar", href: "/theme", icon: Palette, alwaysVisible: true },
+  { title: "Modulos", href: "/modules", icon: Blocks, alwaysVisible: true },
   { title: "Flujo de caja", href: "/cash-flow", icon: Activity },
   { title: "Facturas", href: "/invoices", icon: FileText },
+  {
+    title: "Documentos",
+    href: "/documents",
+    icon: FolderOpen,
+    alwaysVisible: true,
+  },
   { title: "Integraciones", href: "/integrations", icon: Workflow },
 ];
 
@@ -99,8 +108,7 @@ export function Sidebar() {
       <Separator />
       <nav className="flex-1 space-y-1 px-3 py-4">
         {dashboardNavItems.filter((item) => {
-          // Si el item es 'Inicio', 'Perfil', 'Personalizar' o 'Modulos', siempre se muestra.
-          if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules") return true;
+          if (item.alwaysVisible) return true;
           // Si no, verificamos que el módulo esté activo para este negocio
           const moduleKey = item.href.replace("/", "");
           return activeBusiness?.activeModules.includes(moduleKey as ModuleType);

@@ -53,6 +53,25 @@ function parseNestedJson(value: unknown): unknown {
   return parsed;
 }
 
+function redactIntegrationPayload(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(redactIntegrationPayload);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        key === "contentBase64"
+          ? `[base64 omitted: ${typeof item === "string" ? item.length : 0} chars]`
+          : redactIntegrationPayload(item),
+      ]),
+    );
+  }
+
+  return value;
+}
+
 export function normalizeN8nResponse(value: unknown): Record<string, unknown> {
   let normalized = parseNestedJson(value);
 
@@ -113,7 +132,7 @@ export async function triggerN8n(input: {
     direction: "outbound",
     status: webhookUrl ? "pending" : "failed",
     correlation_id: correlationId,
-    request_payload: envelope,
+    request_payload: redactIntegrationPayload(envelope),
     error_message: webhookUrl ? null : "Webhook no configurado",
   });
 

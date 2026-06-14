@@ -1,7 +1,20 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { Upload, X, FileText, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarDays,
+  CheckCircle2,
+  CircleDollarSign,
+  FileText,
+  Landmark,
+  Lightbulb,
+  Loader2,
+  ReceiptText,
+  Upload,
+  X,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,13 +23,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  type DocumentAnalysis,
+  type DocumentCurrency,
+  isDocumentAnalysis,
+} from "@/lib/document-analysis";
 import { cn } from "@/lib/utils";
 
 interface UploadedFileItem {
   file: File;
   id: string;
   status: "idle" | "uploading" | "success" | "error";
-  analysis?: unknown;
+  analysis?: DocumentAnalysis;
   message?: string;
 }
 
@@ -37,6 +55,25 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatAmount(
+  amount: number,
+  currency: DocumentCurrency,
+) {
+  if (currency === "unknown") {
+    return new Intl.NumberFormat("es-MX", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  }
+
+  return new Intl.NumberFormat(currency === "MXN" ? "es-MX" : "en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
 export function UploadTicket({ onUpload }: UploadTicketProps) {
@@ -111,18 +148,28 @@ export function UploadTicket({ onUpload }: UploadTicketProps) {
             { method: "POST", body },
           );
           const data = await response.json().catch(() => ({}));
-          const succeeded = response.ok && data.success;
+          const analysis = isDocumentAnalysis(data.analysis)
+            ? data.analysis
+            : undefined;
+          const succeeded = response.ok && data.success && analysis;
+          if (succeeded) {
+            window.dispatchEvent(new Event("pulso:notifications-changed"));
+          }
           setFiles((prev) =>
             prev.map((file) =>
               file.id === item.id
                 ? {
                     ...file,
                     status: succeeded ? "success" : "error",
-                    analysis: succeeded ? data.analysis : undefined,
+                    analysis,
                     message:
-                      data.message ??
-                      data.error ??
-                      "No se pudo procesar el documento.",
+                      succeeded
+                        ? data.message
+                        : data.error ??
+                          (data.success
+                            ? "El análisis no tiene el formato esperado."
+                            : data.message) ??
+                          "No se pudo procesar el documento.",
                   }
                 : file,
             ),
@@ -241,9 +288,7 @@ export function UploadTicket({ onUpload }: UploadTicketProps) {
                   </p>
                 )}
                 {item.analysis !== undefined && (
-                  <pre className="basis-full overflow-x-auto rounded-md bg-background p-3 text-xs">
-                    {JSON.stringify(item.analysis, null, 2)}
-                  </pre>
+                  <DocumentAnalysisCard analysis={item.analysis} />
                 )}
               </div>
             ))}
@@ -281,5 +326,188 @@ export function UploadTicket({ onUpload }: UploadTicketProps) {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export function DocumentAnalysisCard({
+  analysis,
+}: {
+  analysis: DocumentAnalysis;
+}) {
+  const data = analysis.extractedData;
+  const documentLabels = {
+    invoice: "Factura",
+    ticket: "Ticket de compra",
+    receipt: "Recibo",
+    other: "Otro documento",
+  };
+  const confidence = Math.max(0, Math.min(100, Math.round(data.confidence * 100)));
+
+  return (
+    <div className="basis-full space-y-4 rounded-lg border bg-background p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-muted p-2">
+            <ReceiptText className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="font-semibold">
+              {data.issuerName || "Emisor no identificado"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {data.description || "Comprobante analizado"}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">{documentLabels[data.documentType]}</Badge>
+          <Badge variant={confidence >= 80 ? "default" : "outline"}>
+            Confianza {confidence}%
+          </Badge>
+        </div>
+      </div>
+
+      {data.reviewRequired && !data.reviewed && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+          <p className="flex items-center gap-2 text-sm font-medium text-destructive">
+            <AlertTriangle className="h-4 w-4" />
+            Requiere revisión
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+            {(data.reviewReasons ?? []).map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <DocumentField
+          icon={CircleDollarSign}
+          label="Total"
+          value={formatAmount(data.total, data.currency)}
+        />
+        <DocumentField
+          icon={CalendarDays}
+          label="Fecha"
+          value={data.date || "No identificada"}
+        />
+        <DocumentField
+          icon={Landmark}
+          label="RFC del emisor"
+          value={data.issuerRfc || "No identificado"}
+        />
+        <DocumentField
+          icon={FileText}
+          label="Categoría"
+          value={data.category || "Sin categoría"}
+        />
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 rounded-lg bg-muted/50 p-3 text-sm">
+        <AmountDetail
+          label="Subtotal"
+          value={formatAmount(data.subtotal, data.currency)}
+          note={data.subtotalInferred ? "Calculado" : undefined}
+        />
+        <AmountDetail
+          label="IVA"
+          value={formatAmount(data.iva, data.currency)}
+        />
+        <AmountDetail
+          label="Total"
+          value={formatAmount(data.total, data.currency)}
+        />
+      </div>
+
+      {data.paymentMethod && (
+        <p className="text-xs text-muted-foreground">
+          Método de pago:{" "}
+          <span className="font-medium text-foreground">
+            {data.paymentMethod}
+          </span>
+        </p>
+      )}
+
+      {data.warnings.length > 0 && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+          <p className="flex items-center gap-2 text-sm font-medium text-destructive">
+            <AlertTriangle className="h-4 w-4" />
+            Revisa estos datos
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+            {data.warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {analysis.recommendations.length > 0 && (
+        <div>
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <Lightbulb className="h-4 w-4" />
+            Recomendaciones
+          </p>
+          <ul className="mt-2 space-y-2">
+            {analysis.recommendations.map((recommendation) => (
+              <li
+                key={recommendation}
+                className="rounded-lg border px-3 py-2 text-xs text-muted-foreground"
+              >
+                {recommendation}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {data.documentType === "ticket" && (
+        <p className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+          Este ticket quedó guardado como documento analizado. No sustituye un
+          CFDI ni se registra automáticamente como gasto.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DocumentField({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof FileText;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border p-3">
+      <Icon className="mt-0.5 h-4 w-4 text-muted-foreground" />
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="mt-1 text-sm font-medium">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function AmountDetail({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+}) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">
+        {label}
+        {note && <span className="ml-1">({note})</span>}
+      </p>
+      <p className="mt-1 font-medium">{value}</p>
+    </div>
   );
 }
