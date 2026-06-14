@@ -32,7 +32,6 @@ type NavItem = {
 export const dashboardNavItems: NavItem[] = [
   { title: "Inicio", href: "", icon: LayoutDashboard, alwaysVisible: true },
   { title: "Perfil", href: "/profile", icon: Building2, alwaysVisible: true },
-  { title: "Personalizar", href: "/theme", icon: Palette, alwaysVisible: true },
   { title: "Modulos", href: "/modules", icon: Blocks, alwaysVisible: true },
   { title: "Flujo de caja", href: "/cash-flow", icon: Activity },
   { title: "Facturas", href: "/invoices", icon: FileText },
