@@ -23,6 +23,8 @@ const descriptions: Record<string, string> = {
   "module-recommendation": "Recomienda modulos segun giro, retos y metas.",
   "cashflow-forecast": "Produce escenarios de liquidez a 30, 60 y 90 dias.",
   "document-analysis": "Extrae informacion de tickets y documentos operativos.",
+  "supplier-analysis":
+    "Interpreta cumplimiento, facturacion y respuesta de cada proveedor.",
 };
 
 const workflowRoutes: Record<string, string> = {
@@ -31,7 +33,8 @@ const workflowRoutes: Record<string, string> = {
   "fiscal-profile": "/profile",
   "module-recommendation": "/modules",
   "cashflow-forecast": "/cash-flow",
-  "document-analysis": "/documents",
+  "document-analysis": "/orders?view=documents",
+  "supplier-analysis": "/providers",
 };
 
 export default async function IntegrationsPage({
