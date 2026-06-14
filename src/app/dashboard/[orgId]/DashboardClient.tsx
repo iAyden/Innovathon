@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, CreditCard } from "lucide-react";
 import { CashFlowChart } from "@/components/modules/CashFlowChart";
 import { KpiCard } from "@/components/modules/KpiCard";
-import { UploadTicket } from "@/components/modules/UploadTicket";
 import {
   DashboardInsight,
   DashboardSummary,
@@ -69,13 +68,10 @@ export function DashboardClient() {
           Resumen financiero, fiscal y operativo del mes actual.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {kpis.map((kpi) => (
-          <KpiCard key={kpi.title} {...kpi} />
-        ))}
-      </div>
+
+      {/* 1. Mensaje / Indicador de salud con IA */}
       {insight && (
-        <div className="rounded-xl border bg-card p-5">
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold">{insight.title}</h2>
@@ -88,17 +84,25 @@ export function DashboardClient() {
             </span>
           </div>
           <div className="mt-4 rounded-lg border bg-muted/40 p-3 text-sm">
-            <span className="font-medium">Accion recomendada: </span>
+            <span className="font-medium">Acción recomendada: </span>
             {insight.recommendedAction}
           </div>
         </div>
       )}
-      <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+
+      {/* 2. Grid Principal: Flujo de Caja (Izq) y Métricas (Der) */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Izquierda: Flujo de Caja */}
+        <div className="lg:col-span-2">
           <CashFlowChart data={summary?.cashFlow ?? []} />
         </div>
-        <div className="lg:col-span-2">
-          <UploadTicket />
+
+        {/* Derecha: Métricas Financieras */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold tracking-tight mb-2">Métricas Financieras</h2>
+          {kpis.map((kpi) => (
+            <KpiCard key={kpi.title} {...kpi} />
+          ))}
         </div>
       </div>
     </div>
