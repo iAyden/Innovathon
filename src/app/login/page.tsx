@@ -1,13 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
+import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { login } from "@/app/auth/actions";
 import Link from "next/link";
-import { Wallet } from "lucide-react";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, undefined);
@@ -15,10 +15,14 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
       <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 font-semibold">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <Wallet className="h-4 w-4 text-primary-foreground" />
-        </div>
-        <span>Pulso AI</span>
+        <Image
+          src="/brand/pulso-logo-horizontal-v2.png"
+          alt="Pulso AI"
+          width={80}
+          height={50}
+          className="h-16 w-56 object-contain"
+          priority
+        />
       </Link>
       
       <Card className="w-full max-w-sm">

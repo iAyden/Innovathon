@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useBusiness, Business } from "@/contexts/BusinessContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, ArrowRight, Loader2, WalletCards } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 
 export default function OnboardingPage() {
   const [description, setDescription] = useState("");
@@ -56,12 +57,14 @@ export default function OnboardingPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/20 p-4">
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-8 shadow-xl">
-        <div className="mb-8 flex items-center justify-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-inner">
-            <WalletCards className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <span className="text-2xl font-bold tracking-tight">Pulso AI</span>
-        </div>
+        <Image
+          src="/brand/pulso-logo-central.png"
+          alt="Pulso AI"
+          width={280}
+          height={280}
+          className="mx-auto mb-6 h-40 w-40 object-contain"
+          priority
+        />
 
         <h1 className="mb-2 text-center text-2xl font-bold">Configuración Inteligente</h1>
         <p className="mb-8 text-center text-muted-foreground">

@@ -18,7 +18,8 @@ export const metadata: Metadata = {
 
 const descriptions: Record<string, string> = {
   "request-invoice": "Genera y envia solicitudes de factura a proveedores.",
-  "dashboard-insight": "Convierte indicadores mensuales en acciones prioritarias.",
+  "dashboard-insight":
+    "Analiza liquidez, cobranza, facturacion, inventario y operacion.",
   "fiscal-profile": "Analiza la Constancia de Situacion Fiscal.",
   "module-recommendation": "Recomienda modulos segun giro, retos y metas.",
   "cashflow-forecast": "Produce escenarios de liquidez a 30, 60 y 90 dias.",

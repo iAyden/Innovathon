@@ -7,6 +7,7 @@ import {
 } from "@/lib/document-analysis";
 import { requireOrganization } from "@/lib/server/auth";
 import { errorResponse, HttpError } from "@/lib/server/http";
+import { syncDocumentInventory } from "@/lib/server/inventory-sync";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 const CATEGORIES = [
@@ -99,10 +100,16 @@ export async function PATCH(
     }
 
     if (action === "mark-reviewed") {
+      const inventorySync = await syncDocumentInventory(
+        admin,
+        auth.organizationId,
+        analysis.extractedData,
+      );
       const extractedData = {
         ...analysis.extractedData,
         reviewed: true,
         reviewedAt: new Date().toISOString(),
+        ...inventorySync,
       };
       const { error: updateError } = await admin
         .from("business_documents")

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
-import { Building2, ChevronDown, Menu, WalletCards, Settings } from "lucide-react";
+import { Building2, ChevronDown, Menu, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBusiness, type ModuleType } from "@/contexts/BusinessContext";
 import {
@@ -48,10 +49,14 @@ export function MobileNav() {
       <SheetContent side="left" className="w-72 p-0">
         <SheetHeader className="px-6 py-5">
           <SheetTitle className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <WalletCards className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight">Pulso AI</span>
+            <Image
+              src="/brand/pulso-logo-horizontal-v2.png"
+              alt="Pulso AI"
+              width={80}
+              height={50}
+              className="h-16 w-56 object-contain object-left"
+              priority
+            />
           </SheetTitle>
         </SheetHeader>
         <div className="px-4 py-4">
@@ -92,7 +97,9 @@ export function MobileNav() {
           {dashboardNavItems.filter((item) => {
             if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules" || item.href === "/integrations") return true;
             const moduleKey = item.moduleSlug || item.href.replace("/", "");
-            return activeBusiness?.activeModules.includes(moduleKey as any);
+            return activeBusiness?.activeModules.includes(
+              moduleKey as ModuleType,
+            );
           }).map((item) => {
             const fullHref = `/dashboard/${orgId}${item.href}`;
             const active =
