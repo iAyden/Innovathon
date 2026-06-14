@@ -26,15 +26,18 @@ const descriptions: Record<string, string> = {
 };
 
 const workflowRoutes: Record<string, string> = {
-  "request-invoice": "/dashboard/invoices",
-  "dashboard-insight": "/dashboard",
-  "fiscal-profile": "/dashboard/profile",
-  "module-recommendation": "/dashboard/modules",
-  "cashflow-forecast": "/dashboard/cash-flow",
-  "document-analysis": "/dashboard",
+  "request-invoice": "/invoices",
+  "dashboard-insight": "",
+  "fiscal-profile": "/profile",
+  "module-recommendation": "/modules",
+  "cashflow-forecast": "/cash-flow",
+  "document-analysis": "",
 };
 
-export default function IntegrationsPage() {
+export default async function IntegrationsPage({
+  params,
+}: PageProps<"/dashboard/[orgId]/integrations">) {
+  const { orgId } = await params;
   const workflows = getN8nStatus();
 
   return (
@@ -81,7 +84,7 @@ export default function IntegrationsPage() {
                 {workflow.environmentVariable}
               </code>
               <Link
-                href={workflowRoutes[workflow.workflow]}
+                href={`/dashboard/${orgId}${workflowRoutes[workflow.workflow]}`}
                 className={buttonVariants({
                   variant: "outline",
                   size: "sm",

@@ -1,9 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/fraunces/index.css";
-@import "@fontsource-variable/inter/index.css";
-@import "@fontsource/ibm-plex-mono/index.css";
 
 @custom-variant dark (&:is(.dark *));
 
