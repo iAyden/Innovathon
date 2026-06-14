@@ -118,6 +118,7 @@ export async function POST(request: Request) {
     );
 
     if (error) {
+      console.error("SUPABASE UPSERT ERROR:", error);
       throw new HttpError(
         "Aplica la migracion de Pulso AI antes de configurar modulos.",
         503,
