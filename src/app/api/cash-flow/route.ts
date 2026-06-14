@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { requireOrganization } from "@/lib/server/auth";
 import { errorResponse, HttpError } from "@/lib/server/http";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+// Rutas para manejar el flujo de caja manual
+// GET: Obtener los últimos movimientos de flujo de caja
+// POST: Registrar un nuevo movimiento de flujo de caja   
 
 export async function GET() {
   try {

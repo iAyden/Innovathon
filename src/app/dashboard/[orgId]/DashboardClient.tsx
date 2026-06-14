@@ -94,11 +94,7 @@ export function DashboardClient() {
           Resumen financiero, fiscal y operativo del mes actual.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {kpis.map((kpi) => (
-          <KpiCard key={kpi.title} {...kpi} />
-        ))}
-      </div>
+
       <div className="rounded-xl border bg-card p-5">
         {insight ? (
           <>
@@ -119,7 +115,7 @@ export function DashboardClient() {
             </span>
           </div>
           <div className="mt-4 rounded-lg border bg-muted/40 p-3 text-sm">
-            <span className="font-medium">Accion recomendada: </span>
+            <span className="font-medium">Acción recomendada: </span>
             {insight.recommendedAction}
           </div>
           <Button
@@ -159,12 +155,18 @@ export function DashboardClient() {
           </div>
         )}
       </div>
-      <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
           <CashFlowChart data={summary?.cashFlow ?? []} />
         </div>
-        <div className="lg:col-span-2">
-          <UploadTicket />
+
+        {/* Derecha: Métricas Financieras */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold tracking-tight mb-2">Métricas Financieras</h2>
+          {kpis.map((kpi) => (
+            <KpiCard key={kpi.title} {...kpi} />
+          ))}
         </div>
       </div>
     </div>
