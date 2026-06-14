@@ -85,8 +85,14 @@ export async function POST(
       },
     });
     const generated = {
-      subject: automation.data?.subject ?? fallback.subject,
-      message: automation.data?.message ?? fallback.message,
+      subject:
+        automation.ok && typeof automation.data?.subject === "string"
+          ? automation.data.subject
+          : fallback.subject,
+      message:
+        automation.ok && typeof automation.data?.message === "string"
+          ? automation.data.message
+          : fallback.message,
     };
     const status = automation.configured && automation.ok ? "sent" : "draft";
 

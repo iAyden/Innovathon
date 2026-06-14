@@ -20,6 +20,62 @@ const ENV_BY_WORKFLOW: Record<N8nWorkflow, string> = {
   "document-analysis": "N8N_DOCUMENT_ANALYSIS_WEBHOOK_URL",
 };
 
+function parseJsonString(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+
+  const source = value
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "");
+
+  if (!source.startsWith("{") && !source.startsWith("[")) return value;
+
+  try {
+    return JSON.parse(source);
+  } catch {
+    return value;
+  }
+}
+
+function parseNestedJson(value: unknown): unknown {
+  const parsed = parseJsonString(value);
+
+  if (Array.isArray(parsed)) {
+    return parsed.map(parseNestedJson);
+  }
+
+  if (parsed && typeof parsed === "object") {
+    return Object.fromEntries(
+      Object.entries(parsed).map(([key, item]) => [key, parseNestedJson(item)]),
+    );
+  }
+
+  return parsed;
+}
+
+export function normalizeN8nResponse(value: unknown): Record<string, unknown> {
+  let normalized = parseNestedJson(value);
+
+  for (let depth = 0; depth < 3; depth += 1) {
+    if (
+      normalized &&
+      typeof normalized === "object" &&
+      !Array.isArray(normalized) &&
+      "output" in normalized
+    ) {
+      normalized = parseNestedJson(
+        (normalized as Record<string, unknown>).output,
+      );
+      continue;
+    }
+    break;
+  }
+
+  return normalized && typeof normalized === "object" && !Array.isArray(normalized)
+    ? (normalized as Record<string, unknown>)
+    : {};
+}
+
 export function getN8nStatus() {
   return (Object.keys(ENV_BY_WORKFLOW) as N8nWorkflow[]).map((workflow) => ({
     workflow,
@@ -32,6 +88,7 @@ export async function triggerN8n(input: {
   workflow: N8nWorkflow;
   organizationId: string;
   payload: Record<string, unknown>;
+  timeoutMs?: number;
 }) {
   const webhookUrl = process.env[ENV_BY_WORKFLOW[input.workflow]];
   const correlationId = randomUUID();
@@ -72,10 +129,11 @@ export async function triggerN8n(input: {
         ...(signature ? { "x-pulso-signature": signature } : {}),
       },
       body: serialized,
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(input.timeoutMs ?? 15000),
       cache: "no-store",
     });
     const responseData = await response.json().catch(() => null);
+    const normalizedData = normalizeN8nResponse(responseData);
 
     await admin
       ?.from("integration_events")
@@ -91,7 +149,7 @@ export async function triggerN8n(input: {
       configured: true,
       ok: response.ok,
       correlationId,
-      data: responseData,
+      data: normalizedData,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error de conexion";

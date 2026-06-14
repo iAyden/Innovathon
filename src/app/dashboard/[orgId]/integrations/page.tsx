@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { CheckCircle2, CircleDashed, Webhook } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, CircleDashed, Webhook } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -23,7 +25,19 @@ const descriptions: Record<string, string> = {
   "document-analysis": "Extrae informacion de tickets y documentos operativos.",
 };
 
-export default function IntegrationsPage() {
+const workflowRoutes: Record<string, string> = {
+  "request-invoice": "/invoices",
+  "dashboard-insight": "",
+  "fiscal-profile": "/profile",
+  "module-recommendation": "/modules",
+  "cashflow-forecast": "/cash-flow",
+  "document-analysis": "",
+};
+
+export default async function IntegrationsPage({
+  params,
+}: PageProps<"/dashboard/[orgId]/integrations">) {
+  const { orgId } = await params;
   const workflows = getN8nStatus();
 
   return (
@@ -69,6 +83,17 @@ export default function IntegrationsPage() {
               <code className="mt-3 block break-all rounded bg-muted px-2 py-1 text-xs">
                 {workflow.environmentVariable}
               </code>
+              <Link
+                href={`/dashboard/${orgId}${workflowRoutes[workflow.workflow]}`}
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "sm",
+                  className: "mt-3",
+                })}
+              >
+                Abrir modulo
+                <ArrowRight />
+              </Link>
             </div>
           ))}
         </CardContent>

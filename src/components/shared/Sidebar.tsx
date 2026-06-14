@@ -10,7 +10,6 @@ import {
   LayoutDashboard,
   LogOut,
   Sparkles,
-  WalletCards,
   Workflow,
   ChevronDown,
   Palette,
@@ -19,6 +18,7 @@ import { logout } from "@/app/auth/actions";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { useBusiness, type ModuleType } from "@/contexts/BusinessContext";
 
 type NavItem = {
   title: string;
@@ -37,8 +37,6 @@ export const dashboardNavItems: NavItem[] = [
   { title: "Integraciones", href: "/integrations", icon: Workflow },
 ];
 
-import { useBusiness } from "@/contexts/BusinessContext";
-
 export function Sidebar() {
   const pathname = usePathname();
   const params = useParams();
@@ -49,7 +47,10 @@ export function Sidebar() {
     <aside className="hidden h-full w-64 flex-col border-r border-border bg-card lg:flex">
       <div className="flex flex-col px-4 py-4 gap-4">
         {/* Workspace Switcher MOCK */}
-        <div className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors">
+        <Link
+          href="/dashboard"
+          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
+        >
           <div className="flex items-center gap-2.5">
             <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
               <Building2 className="h-3 w-3 text-primary-foreground" />
@@ -57,7 +58,7 @@ export function Sidebar() {
             <span className="text-sm font-semibold truncate max-w-[120px]">{activeBusiness?.name || "Cargando..."}</span>
           </div>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        </div>
+        </Link>
       </div>
       <Separator />
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -66,7 +67,7 @@ export function Sidebar() {
           if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules") return true;
           // Si no, verificamos que el módulo esté activo para este negocio
           const moduleKey = item.href.replace("/", "");
-          return activeBusiness?.activeModules.includes(moduleKey as any);
+          return activeBusiness?.activeModules.includes(moduleKey as ModuleType);
         }).map((item) => {
           const fullHref = `/dashboard/${orgId}${item.href}`;
           const active =
@@ -93,7 +94,7 @@ export function Sidebar() {
       <div className="px-3 pb-4">
         <Separator className="mb-4" />
         <Link
-          href="/dashboard/profile"
+          href={`/dashboard/${orgId}/profile`}
           className="block rounded-lg border border-border bg-muted/50 p-4"
         >
           <div className="mb-2 flex items-center gap-2">
