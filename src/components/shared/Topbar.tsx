@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Bell, Search } from "lucide-react";
+import { Bell } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { MobileNav } from "./MobileNav";
+
+import { useBusiness } from "@/contexts/BusinessContext";
 
 export function Topbar({
   displayName,
@@ -25,6 +26,7 @@ export function Topbar({
   email: string;
 }) {
   const params = useParams<{ orgId?: string }>();
+  const { activeBusiness } = useBusiness();
   const dashboardBase = params.orgId
     ? `/dashboard/${params.orgId}`
     : "/dashboard";
@@ -37,18 +39,18 @@ export function Topbar({
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card/80 px-4 backdrop-blur-sm lg:px-6">
-      <MobileNav />
-      <div className="hidden max-w-sm flex-1 md:flex">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar facturas, proveedores..."
-            className="border-none bg-muted/50 pl-9"
-          />
-        </div>
+      <div className="flex items-center">
+        <MobileNav />
       </div>
-      <div className="flex-1 md:flex-none" />
+      
+      <div className="flex-1 flex justify-center">
+        {activeBusiness && (
+          <span className="hidden md:block text-lg md:text-xl font-bold text-primary tracking-tight">
+            {activeBusiness.name}
+          </span>
+        )}
+      </div>
+
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon">
           <Bell className="h-4 w-4" />

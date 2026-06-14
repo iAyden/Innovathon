@@ -8,13 +8,13 @@ import {
   Building2,
   FileText,
   LayoutDashboard,
-  LogOut,
   Sparkles,
   Workflow,
   ChevronDown,
+  ChevronRight,
   Palette,
+  Settings,
 } from "lucide-react";
-import { logout } from "@/app/auth/actions";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -30,13 +30,13 @@ type NavItem = {
 export const dashboardNavItems: NavItem[] = [
   { title: "Inicio", href: "", icon: LayoutDashboard },
   { title: "Perfil", href: "/profile", icon: Building2 },
-  { title: "Personalizar", href: "/theme", icon: Palette },
   { title: "Modulos", href: "/modules", icon: Blocks },
   { title: "Flujo de caja", href: "/cash-flow", icon: Activity },
   { title: "Facturas", href: "/invoices", icon: FileText },
   { title: "Integraciones", href: "/integrations", icon: Workflow },
 ];
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -53,6 +53,7 @@ export function Sidebar() {
   const orgId = params.orgId as string;
   const { activeBusiness, businesses } = useBusiness();
   const router = useRouter();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <aside className="hidden h-full w-64 flex-col border-r border-border bg-card lg:flex">
@@ -128,27 +129,36 @@ export function Sidebar() {
       </nav>
       <div className="px-3 pb-4">
         <Separator className="mb-4" />
-        <Link
-          href={`/dashboard/${orgId}/profile`}
-          className="block rounded-lg border border-border bg-muted/50 p-4"
-        >
-          <div className="mb-2 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold">Personaliza Pulso</span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Completa tu perfil para mejorar modulos y recomendaciones.
-          </p>
-        </Link>
-        <form action={logout} className="mt-4">
+        
+        {/* Settings Toggle */}
+        <div className="mb-2">
           <button
-            type="submit"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            <LogOut className="h-4 w-4" />
-            Cerrar sesion
+            <div className="flex items-center gap-3">
+              <Settings className="h-4 w-4" />
+              Configuracion
+            </div>
+            <ChevronDown className={cn("h-4 w-4 transition-transform", settingsOpen ? "rotate-180" : "")} />
           </button>
-        </form>
+          
+          {settingsOpen && (
+            <div className="mt-1 flex flex-col pl-9 space-y-1">
+              <Link
+                href={`/dashboard/${orgId}/theme`}
+                className={cn(
+                  "block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                  pathname.startsWith(`/dashboard/${orgId}/theme`) && "bg-muted text-foreground font-medium"
+                )}
+              >
+                Personalizar Pulso
+              </Link>
+            </div>
+          )}
+        </div>
+
+
       </div>
     </aside>
   );

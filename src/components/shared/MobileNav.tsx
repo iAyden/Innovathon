@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
-import { Building2, ChevronDown, LogOut, Menu, WalletCards } from "lucide-react";
-import { logout } from "@/app/auth/actions";
+import { Building2, ChevronDown, Menu, WalletCards, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBusiness, type ModuleType } from "@/contexts/BusinessContext";
 import {
@@ -31,6 +30,7 @@ import { Sparkles } from "lucide-react";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const pathname = usePathname();
   const params = useParams();
   const orgId = params.orgId as string;
@@ -56,26 +56,47 @@ export function MobileNav() {
         </SheetHeader>
         <div className="px-4 py-4">
           {/* Workspace Switcher MOCK */}
-          <Link
-            href="/dashboard"
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
-                <Building2 className="h-3 w-3 text-primary-foreground" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div
+                className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
+                    <Building2 className="h-3 w-3 text-primary-foreground" />
+                  </div>
+                  <span className="text-sm font-semibold truncate max-w-[120px]">{activeBusiness?.name || "Cargando..."}</span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </div>
-              <span className="text-sm font-semibold truncate max-w-[120px]">{activeBusiness?.name || "Cargando..."}</span>
-            </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </Link>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="start">
+              <DropdownMenuLabel>Tus Negocios</DropdownMenuLabel>
+              {businesses.map((business) => (
+                <DropdownMenuItem key={business.id} onClick={() => router.push(`/dashboard/${business.id}`)}>
+                  {business.name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  router.push("/onboarding");
+                  setOpen(false);
+                }}
+                className="cursor-pointer text-primary"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Nuevo Negocio (IA)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <Separator />
-        <nav className="space-y-1 px-3 py-4">
+        <nav className="space-y-1 px-3 py-4 flex-1">
           {dashboardNavItems.filter((item) => {
             if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules") return true;
             const moduleKey = item.href.replace("/", "");
-            return activeBusiness?.activeModules.includes(moduleKey as ModuleType);
+            return activeBusiness?.activeModules.includes(moduleKey as any);
           }).map((item) => {
             const fullHref = `/dashboard/${orgId}${item.href}`;
             const active =
@@ -100,16 +121,39 @@ export function MobileNav() {
             );
           })}
         </nav>
-        <div className="absolute bottom-6 left-0 w-full px-6">
-          <form action={logout}>
+        
+        <div className="px-3 pb-4">
+          <Separator className="mb-4" />
+          
+          <div className="mb-2">
             <button
-              type="submit"
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              <LogOut className="h-4 w-4" />
-              Cerrar sesion
+              <div className="flex items-center gap-3">
+                <Settings className="h-4 w-4" />
+                Configuracion
+              </div>
+              <ChevronDown className={cn("h-4 w-4 transition-transform", settingsOpen ? "rotate-180" : "")} />
             </button>
-          </form>
+            
+            {settingsOpen && (
+              <div className="mt-1 flex flex-col pl-9 space-y-1">
+                <Link
+                  href={`/dashboard/${orgId}/theme`}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                    pathname.startsWith(`/dashboard/${orgId}/theme`) && "bg-muted text-foreground font-medium"
+                  )}
+                >
+                  Personalizar Pulso
+                </Link>
+              </div>
+            )}
+          </div>
+
+
         </div>
       </SheetContent>
     </Sheet>
