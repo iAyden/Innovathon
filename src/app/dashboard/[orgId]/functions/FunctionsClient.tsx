@@ -25,7 +25,7 @@ type ModuleItem = {
   source: string;
 };
 
-export function ModulesClient() {
+export function FunctionsClient() {
   const [modules, setModules] = useState<ModuleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
@@ -136,9 +136,9 @@ export function ModulesClient() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Modulos del negocio</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Funciones del negocio</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Activa solo las herramientas que necesita tu operacion.
+            Activa las herramientas operativas que tu negocio necesita.
           </p>
         </div>
         <Button onClick={requestRecommendations} disabled={working !== null}>
@@ -154,10 +154,10 @@ export function ModulesClient() {
       {message && <div className="rounded-lg border bg-muted px-4 py-3 text-sm">{message}</div>}
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Cargando modulos...</p>
+        <p className="text-sm text-muted-foreground">Cargando funciones...</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {modules.filter(m => (m as any).type === "module").map((module) => (
+          {modules.filter(m => (m as any).type === "function").map((module) => (
             <Card key={module.slug}>
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">

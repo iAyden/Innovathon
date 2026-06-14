@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import {
   Activity,
-  Blocks,
   Building2,
   FileText,
   FolderOpen,
@@ -12,9 +11,10 @@ import {
   Sparkles,
   Workflow,
   ChevronDown,
-  ChevronRight,
-  Palette,
   Settings,
+  Package,
+  ShoppingCart,
+  Truck,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -25,24 +25,17 @@ type NavItem = {
   title: string;
   href: string;
   icon: LucideIcon;
-  alwaysVisible?: boolean;
+  moduleSlug?: string;
 };
 
 // Rutas relativas, el orgId se antepondrá dinámicamente
 export const dashboardNavItems: NavItem[] = [
-  { title: "Inicio", href: "", icon: LayoutDashboard, alwaysVisible: true },
-  { title: "Perfil", href: "/profile", icon: Building2, alwaysVisible: true },
-  { title: "Personalizar", href: "/theme", icon: Palette, alwaysVisible: true },
-  { title: "Modulos", href: "/modules", icon: Blocks, alwaysVisible: true },
-  { title: "Flujo de caja", href: "/cash-flow", icon: Activity },
-  { title: "Facturas", href: "/invoices", icon: FileText },
-  {
-    title: "Documentos",
-    href: "/documents",
-    icon: FolderOpen,
-    alwaysVisible: true,
-  },
-  { title: "Integraciones", href: "/integrations", icon: Workflow },
+  { title: "Panel de control", href: "", icon: LayoutDashboard },
+  { title: "Flujo de caja", href: "/cash-flow", icon: Activity, moduleSlug: "cash-flow" },
+  { title: "Facturas", href: "/invoices", icon: FileText, moduleSlug: "invoices" },
+  { title: "Proveedores", href: "/providers", icon: Truck, moduleSlug: "providers" },
+  { title: "Inventario", href: "/inventory", icon: Package, moduleSlug: "inventory" },
+  { title: "Pedidos", href: "/orders", icon: ShoppingCart, moduleSlug: "orders" },
 ];
 
 import { useState } from "react";
@@ -108,9 +101,10 @@ export function Sidebar() {
       <Separator />
       <nav className="flex-1 space-y-1 px-3 py-4">
         {dashboardNavItems.filter((item) => {
-          if (item.alwaysVisible) return true;
+          // Si el item es 'Inicio', 'Perfil', 'Personalizar', 'Modulos' o 'Integraciones', siempre se muestra.
+          if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules" || item.href === "/integrations") return true;
           // Si no, verificamos que el módulo esté activo para este negocio
-          const moduleKey = item.href.replace("/", "");
+          const moduleKey = item.moduleSlug || item.href.replace("/", "");
           return activeBusiness?.activeModules.includes(moduleKey as ModuleType);
         }).map((item) => {
           const fullHref = `/dashboard/${orgId}${item.href}`;
@@ -161,6 +155,33 @@ export function Sidebar() {
                 )}
               >
                 Personalizar Pulso
+              </Link>
+              <Link
+                href={`/dashboard/${orgId}/functions`}
+                className={cn(
+                  "block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                  pathname.startsWith(`/dashboard/${orgId}/functions`) && "bg-muted text-foreground font-medium"
+                )}
+              >
+                Funciones
+              </Link>
+              <Link
+                href={`/dashboard/${orgId}/modules`}
+                className={cn(
+                  "block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                  pathname.startsWith(`/dashboard/${orgId}/modules`) && "bg-muted text-foreground font-medium"
+                )}
+              >
+                Módulos
+              </Link>
+              <Link
+                href={`/dashboard/${orgId}/integrations`}
+                className={cn(
+                  "block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                  pathname.startsWith(`/dashboard/${orgId}/integrations`) && "bg-muted text-foreground font-medium"
+                )}
+              >
+                Integraciones
               </Link>
             </div>
           )}
