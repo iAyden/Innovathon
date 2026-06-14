@@ -10,14 +10,15 @@ import {
   LayoutDashboard,
   LogOut,
   Sparkles,
-  WalletCards,
   Workflow,
   ChevronDown,
+  Palette,
 } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { useBusiness, type ModuleType } from "@/contexts/BusinessContext";
 
 type NavItem = {
   title: string;
@@ -29,6 +30,7 @@ type NavItem = {
 export const dashboardNavItems: NavItem[] = [
   { title: "Inicio", href: "", icon: LayoutDashboard },
   { title: "Perfil", href: "/profile", icon: Building2 },
+  { title: "Personalizar", href: "/theme", icon: Palette },
   { title: "Modulos", href: "/modules", icon: Blocks },
   { title: "Flujo de caja", href: "/cash-flow", icon: Activity },
   { title: "Facturas", href: "/invoices", icon: FileText },
@@ -97,11 +99,11 @@ export function Sidebar() {
       <Separator />
       <nav className="flex-1 space-y-1 px-3 py-4">
         {dashboardNavItems.filter((item) => {
-          // Si el item es 'Inicio' o 'Perfil', siempre se muestra.
-          if (item.href === "" || item.href === "/profile" || item.href === "/modules") return true;
+          // Si el item es 'Inicio', 'Perfil', 'Personalizar' o 'Modulos', siempre se muestra.
+          if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules") return true;
           // Si no, verificamos que el módulo esté activo para este negocio
           const moduleKey = item.href.replace("/", "");
-          return activeBusiness?.activeModules.includes(moduleKey as any);
+          return activeBusiness?.activeModules.includes(moduleKey as ModuleType);
         }).map((item) => {
           const fullHref = `/dashboard/${orgId}${item.href}`;
           const active =
@@ -128,7 +130,7 @@ export function Sidebar() {
       <div className="px-3 pb-4">
         <Separator className="mb-4" />
         <Link
-          href="/dashboard/profile"
+          href={`/dashboard/${orgId}/profile`}
           className="block rounded-lg border border-border bg-muted/50 p-4"
         >
           <div className="mb-2 flex items-center gap-2">

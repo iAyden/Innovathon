@@ -6,7 +6,7 @@ import { usePathname, useParams } from "next/navigation";
 import { Building2, ChevronDown, LogOut, Menu, WalletCards } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
-import { useBusiness } from "@/contexts/BusinessContext";
+import { useBusiness, type ModuleType } from "@/contexts/BusinessContext";
 import {
   Sheet,
   SheetContent,
@@ -55,56 +55,27 @@ export function MobileNav() {
           </SheetTitle>
         </SheetHeader>
         <div className="px-4 py-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors w-full text-left">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
-                  <Building2 className="h-3 w-3 text-primary-foreground" />
-                </div>
-                <span className="text-sm font-semibold truncate max-w-[120px]">
-                  {activeBusiness?.name || "Cargando..."}
-                </span>
+          {/* Workspace Switcher MOCK */}
+          <Link
+            href="/dashboard"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
+                <Building2 className="h-3 w-3 text-primary-foreground" />
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[240px]" align="start">
-              <DropdownMenuLabel>Mis Negocios</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {businesses.map((business) => (
-                <DropdownMenuItem
-                  key={business.id}
-                  onClick={() => {
-                    router.push(`/dashboard/${business.id}`);
-                    setOpen(false);
-                  }}
-                  className="cursor-pointer flex items-center gap-2"
-                >
-                  <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/20">
-                    <Building2 className="h-3 w-3 text-primary" />
-                  </div>
-                  <span className="truncate">{business.name}</span>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  router.push("/onboarding");
-                  setOpen(false);
-                }}
-                className="cursor-pointer text-primary"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Nuevo Negocio (IA)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <span className="text-sm font-semibold truncate max-w-[120px]">{activeBusiness?.name || "Cargando..."}</span>
+            </div>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </Link>
         </div>
         <Separator />
         <nav className="space-y-1 px-3 py-4">
           {dashboardNavItems.filter((item) => {
-            if (item.href === "" || item.href === "/profile" || item.href === "/modules") return true;
+            if (item.href === "" || item.href === "/profile" || item.href === "/theme" || item.href === "/modules") return true;
             const moduleKey = item.href.replace("/", "");
-            return activeBusiness?.activeModules.includes(moduleKey as any);
+            return activeBusiness?.activeModules.includes(moduleKey as ModuleType);
           }).map((item) => {
             const fullHref = `/dashboard/${orgId}${item.href}`;
             const active =

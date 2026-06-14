@@ -49,10 +49,12 @@ export type DashboardInsight = {
   message: string;
   recommendedAction: string;
   riskLevel: "low" | "medium" | "high" | string;
+  source: "n8n" | "rules";
 };
 
 export async function getDashboardInsight(): Promise<DashboardInsight> {
   const response = await fetch("/api/dashboard/insight", {
+    method: "POST",
     cache: "no-store",
   });
 

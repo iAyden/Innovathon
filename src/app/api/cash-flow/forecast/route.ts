@@ -27,9 +27,14 @@ export async function POST() {
     return NextResponse.json({
       configured: automation.configured,
       correlationId: automation.correlationId,
-      forecast: automation.data?.forecast ?? null,
-      message: automation.configured
-        ? "Pronostico solicitado."
+      forecast:
+        automation.ok && automation.data
+          ? automation.data.forecast ?? automation.data
+          : null,
+      message: automation.ok
+        ? "Pronostico generado correctamente."
+        : automation.configured
+          ? "n8n no pudo generar el pronostico."
         : "Configura N8N_CASHFLOW_FORECAST_WEBHOOK_URL para activar el pronostico.",
     });
   } catch (error) {

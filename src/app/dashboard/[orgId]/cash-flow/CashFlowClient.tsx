@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Bot, Plus } from "lucide-react";
+import { Bot, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +27,7 @@ export function CashFlowClient() {
   const [entries, setEntries] = useState<CashEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
+  const [forecasting, setForecasting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [forecast, setForecast] = useState<unknown>(null);
   const [form, setForm] = useState({
@@ -90,7 +91,7 @@ export function CashFlowClient() {
   }
 
   async function requestForecast() {
-    setWorking(true);
+    setForecasting(true);
     setMessage(null);
     try {
       const response = await fetch("/api/cash-flow/forecast", { method: "POST" });
@@ -101,7 +102,7 @@ export function CashFlowClient() {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Error inesperado.");
     } finally {
-      setWorking(false);
+      setForecasting(false);
     }
   }
 
@@ -121,9 +122,16 @@ export function CashFlowClient() {
             Registra movimientos y solicita escenarios de liquidez.
           </p>
         </div>
-        <Button onClick={requestForecast} disabled={working || entries.length === 0}>
-          <Bot className="mr-2 h-4 w-4" />
-          Pronosticar 30, 60 y 90 dias
+        <Button
+          onClick={requestForecast}
+          disabled={forecasting || entries.length === 0}
+        >
+          {forecasting ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <Bot />
+          )}
+          {forecasting ? "Generando pronostico..." : "Pronosticar con IA"}
         </Button>
       </div>
 

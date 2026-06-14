@@ -21,6 +21,7 @@ interface BusinessContextType {
   activeBusiness: Business | null;
   setActiveBusinessId: (id: string | null) => void;
   addBusiness: (business: Business) => void;
+  updateBusiness: (business: Business) => void;
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
@@ -73,6 +74,12 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("finflow_active_business", business.id);
   };
 
+  const updateBusiness = (updated: Business) => {
+    const newBusinesses = businesses.map(b => b.id === updated.id ? updated : b);
+    setBusinesses(newBusinesses);
+    localStorage.setItem("finflow_businesses", JSON.stringify(newBusinesses));
+  };
+
   const handleSetActiveBusiness = (id: string | null) => {
     setActiveBusinessId(id);
     if (id) {
@@ -85,7 +92,7 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
   const activeBusiness = businesses.find(b => b.id === activeBusinessId) || null;
 
   return (
-    <BusinessContext.Provider value={{ businesses, activeBusiness, setActiveBusinessId: handleSetActiveBusiness, addBusiness }}>
+    <BusinessContext.Provider value={{ businesses, activeBusiness, setActiveBusinessId: handleSetActiveBusiness, addBusiness, updateBusiness }}>
       {children}
     </BusinessContext.Provider>
   );

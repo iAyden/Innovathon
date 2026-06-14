@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Bell, Search } from "lucide-react";
 import { logout } from "@/app/auth/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -23,6 +24,10 @@ export function Topbar({
   displayName: string;
   email: string;
 }) {
+  const params = useParams<{ orgId?: string }>();
+  const dashboardBase = params.orgId
+    ? `/dashboard/${params.orgId}`
+    : "/dashboard";
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -72,10 +77,14 @@ export function Topbar({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/dashboard/profile" />}>
+            <DropdownMenuItem
+              render={<Link href={`${dashboardBase}/profile`} />}
+            >
               Perfil del negocio
             </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/dashboard/integrations" />}>
+            <DropdownMenuItem
+              render={<Link href={`${dashboardBase}/integrations`} />}
+            >
               Integraciones
             </DropdownMenuItem>
             <DropdownMenuSeparator />
